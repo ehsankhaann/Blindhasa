@@ -1,0 +1,1751 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0B0B0B">
+<title>BLINDHASA · Job board</title>
+<meta name="description" content="BLINDHASA armored-vehicle workshop tracker: every vehicle from arrival to delivery with named sign-offs and a dated audit trail.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;600&display=swap" rel="stylesheet">
+<style>
+/* ============================================================
+   TOKENS & BASE
+   ============================================================ */
+:root{
+  --bg:#F5F5F5;--card:#FFFFFF;--ink:#0B0B0B;--border:#E5E5E5;--muted:#6B6B6B;
+  --red:#D61F1F;--red-border:#F5B5B5;--red-tint:#FDF2F2;
+  --amber-bg:#FFF7E6;--amber-bd:#F5D9A6;--amber:#7A4B00;
+  --r:22px;--tab-h:64px;--top-h:64px;--sab:env(safe-area-inset-bottom,0px);
+  --font:'Inter',system-ui,-apple-system,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;
+  --mono:'JetBrains Mono',ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+}
+*,*::before,*::after{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--font);font-size:15px;line-height:1.35;-webkit-font-smoothing:antialiased;min-height:100vh}
+button{font:inherit;color:inherit;background:none;border:0;padding:0;cursor:pointer;-webkit-tap-highlight-color:transparent}
+button:disabled{cursor:not-allowed}
+input,select,textarea{font:inherit;color:inherit}
+a{color:inherit;text-decoration:none}
+h1,h2,h3,p,dl,dd{margin:0}
+:focus-visible{outline:2px solid var(--ink);outline-offset:2px}
+.hidden{display:none!important}
+.sr-only{position:absolute!important;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
+.muted{color:var(--muted)}.red{color:var(--red)}
+.spacer{flex:1}
+.mono{font-family:var(--mono);font-weight:600;font-size:13px;letter-spacing:.01em}
+.eyebrow{font-size:11px;font-weight:700;letter-spacing:.16em;text-transform:uppercase;color:var(--muted)}
+.card{background:var(--card);border:1px solid var(--border);border-radius:var(--r)}
+.avatar{width:40px;height:40px;border-radius:50%;background:var(--ink);color:#fff;font-weight:700;font-size:13px;display:inline-flex;align-items:center;justify-content:center;letter-spacing:.02em;flex:0 0 auto}
+.avatar.sm{width:34px;height:34px;font-size:12px}
+.icon-btn{width:44px;height:44px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;transition:background .15s}
+.icon-btn:hover{background:var(--bg)}
+
+/* ============================================================
+   APP SHELL · header, tab bar, sidebar
+   ============================================================ */
+.app{min-height:100vh}
+.topbar{position:sticky;top:0;z-index:30;background:#fff;border-bottom:1px solid var(--border);height:var(--top-h);display:flex;align-items:center;gap:6px;padding:0 12px 0 16px}
+.wordmark{display:inline-block;border:2px solid var(--ink);padding:7px 10px;font-weight:800;letter-spacing:.14em;font-size:13px;line-height:1;border-radius:4px;color:var(--ink)}
+.topbar-user{display:none;font-size:13px;gap:6px;align-items:center;margin-left:8px}
+.tabbar{position:fixed;left:0;right:0;bottom:0;height:calc(var(--tab-h) + var(--sab));padding-bottom:var(--sab);background:#fff;border-top:1px solid var(--border);display:flex;z-index:30}
+.tab{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;font-size:11px;font-weight:600;color:var(--muted);position:relative;min-height:44px;transition:color .15s}
+.tab.active{color:var(--ink)}
+.tab.active::before{content:'';position:absolute;top:-1px;left:50%;transform:translateX(-50%);width:28px;height:3px;background:var(--ink);border-radius:0 0 3px 3px}
+.badge{background:var(--red);color:#fff;font-size:10px;font-weight:700;min-width:18px;height:18px;border-radius:9px;display:inline-flex;align-items:center;justify-content:center;padding:0 5px;line-height:1}
+.tab .badge{position:absolute;top:8px;left:calc(50% + 4px)}
+.sidebar{display:none}
+.sidenav{display:flex;flex-direction:column;gap:4px;margin-top:28px}
+.side-item{display:flex;align-items:center;gap:12px;padding:0 14px;min-height:46px;border-radius:14px;font-weight:600;font-size:14px;color:var(--muted);transition:background .15s,color .15s}
+.side-item:hover{background:var(--bg);color:var(--ink)}
+.side-item.active{background:var(--ink);color:#fff}
+.side-item .badge{margin-left:auto;min-width:20px;height:20px;border-radius:10px;font-size:11px}
+.side-foot{margin-top:auto}
+.side-user{display:flex;align-items:center;gap:10px;width:100%;padding:10px;border-radius:14px;text-align:left;min-height:56px}
+.side-user:hover{background:var(--bg)}
+.su-txt .n,.su-txt .r{display:block}.su-txt .n{font-weight:700;font-size:14px}.su-txt .r{font-size:12px;color:var(--muted)}
+.side-meta{display:flex;align-items:center;gap:6px;font-size:12px;color:var(--muted);padding:8px 10px 0}
+
+/* ============================================================
+   MAIN · board
+   ============================================================ */
+.main{padding:16px 16px calc(var(--tab-h) + 32px);max-width:720px;margin:0 auto;width:100%}
+.h-row{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-top:4px}
+h1{font-size:30px;font-weight:800;letter-spacing:-.025em;line-height:1.1}
+.updated{display:flex;align-items:center;gap:6px;font-size:13px;color:var(--muted);margin-top:6px}
+.fab{width:48px;height:48px;border-radius:50%;background:var(--ink);color:#fff;display:inline-flex;align-items:center;justify-content:center;box-shadow:0 6px 16px rgba(0,0,0,.18);flex:0 0 auto;transition:transform .15s}
+.fab:active{transform:scale(.94)}
+.stats{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:18px 0 14px}
+.stat{background:#fff;border:1px solid var(--border);border-radius:18px;padding:14px 14px 12px;text-align:left;position:relative;overflow:hidden;min-height:96px;transition:transform .15s,box-shadow .15s,border-color .15s}
+.stat:hover{box-shadow:0 4px 14px rgba(0,0,0,.06)}
+.stat:active{transform:scale(.98)}
+.stat.active{border-color:var(--ink);box-shadow:inset 0 0 0 1px var(--ink)}
+.stat.danger{border-top:3px solid var(--red)}
+.stat .label{font-size:11px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--muted)}
+.stat .num{font-size:34px;font-weight:800;letter-spacing:-.03em;line-height:1.1;margin:6px 0 2px}
+.stat.danger .num{color:var(--red)}
+.stat .sub{font-size:12px;color:var(--muted)}
+.chips-row{display:flex;align-items:center;gap:12px}
+.chips{display:flex;gap:8px;overflow-x:auto;padding:4px 2px 10px;scrollbar-width:none;flex:1;min-width:0}
+.chips::-webkit-scrollbar{display:none}
+.chip{flex:0 0 auto;display:inline-flex;align-items:center;gap:7px;height:40px;padding:0 6px 0 14px;border:1px solid var(--border);background:#fff;border-radius:999px;font-size:13px;font-weight:600;white-space:nowrap;transition:background .15s,color .15s,border-color .15s}
+.chip .count{background:var(--bg);border-radius:999px;min-width:26px;height:26px;padding:0 7px;display:inline-flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:var(--muted)}
+.chip.active{background:var(--ink);color:#fff;border-color:var(--ink)}
+.chip.active .count{background:rgba(255,255,255,.18);color:#fff}
+.seg-toggle{display:none;border:1px solid var(--border);border-radius:999px;padding:3px;background:#fff;gap:2px;flex:0 0 auto}
+.seg-toggle button{display:inline-flex;align-items:center;gap:6px;height:32px;padding:0 12px;border-radius:999px;font-size:13px;font-weight:600;color:var(--muted)}
+.seg-toggle button.on{background:var(--ink);color:#fff}
+.group-h{display:flex;align-items:center;gap:6px;font-size:11px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);margin:18px 2px 8px}
+.group-h.late{color:var(--red)}
+
+/* job card */
+.job-card{position:relative;overflow:hidden;padding:14px 14px 12px 16px;margin-bottom:10px;width:100%;text-align:left;display:block;cursor:pointer;transition:transform .15s,box-shadow .15s,border-color .15s}
+.job-card:hover{box-shadow:0 4px 14px rgba(0,0,0,.06)}
+.job-card:active{transform:scale(.995)}
+.job-card.sel{border-color:var(--ink);box-shadow:inset 0 0 0 1px var(--ink)}
+.job-card.late{border-color:var(--red-border)}
+.job-card.late::before{content:'';position:absolute;left:0;top:0;bottom:0;width:5px;background:var(--red)}
+.jc-top{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.badge-armor{display:inline-flex;align-items:center;gap:4px;border:1px solid var(--ink);border-radius:999px;padding:2px 8px;font-size:11px;font-weight:700;line-height:1.4}
+.pill{border:1px solid var(--border);border-radius:999px;padding:3px 8px;font-size:10px;font-weight:800;letter-spacing:.08em;color:var(--muted);line-height:1.2}
+.pill-dark{background:var(--ink);color:#fff;border-color:var(--ink)}
+.pill-late{background:var(--red-tint);color:var(--red);border:1px solid var(--red-border);border-radius:999px;padding:3px 8px;font-size:10px;font-weight:800;letter-spacing:.08em;line-height:1.2}
+.pill-signer{margin-left:auto;background:var(--ink);color:#fff;border-radius:999px;padding:3px 9px 3px 6px;font-size:11px;font-weight:700;display:inline-flex;align-items:center;gap:4px}
+.jc-body{display:flex;justify-content:space-between;gap:12px;margin-top:10px}
+.jc-year{font-size:11px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--muted)}
+.jc-model{font-size:20px;font-weight:800;letter-spacing:-.02em;line-height:1.15;margin:2px 0}
+.jc-client{font-size:13px;color:var(--muted)}
+.jc-right{text-align:right;flex:0 0 auto}
+.jc-date{display:inline-flex;align-items:center;gap:5px;font-size:13px;font-weight:600}
+.jc-due{font-size:12px;color:var(--muted);margin-top:3px;font-weight:600}
+.jc-due.late{color:var(--red)}
+.jc-bottom{display:flex;align-items:center;gap:10px;margin-top:12px}
+.segs{display:flex;gap:3px;flex:0 0 auto;width:132px}
+.seg{height:6px;flex:1;border-radius:3px;background:#E5E5E5}
+.seg.done{background:var(--ink)}
+.seg.cur{background:#fff;box-shadow:inset 0 0 0 1.5px var(--ink)}
+.seg.cur.late{background:var(--red);box-shadow:none}
+.jc-stage{font-size:12px;font-weight:600;color:var(--muted);flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.jc-bottom > svg{color:var(--muted);flex:0 0 auto}
+
+/* kanban (desktop) */
+.kanban{display:flex;gap:12px;overflow-x:auto;padding:4px 0 12px}
+.kcol{flex:0 0 232px;background:#ECECEC;border-radius:18px;padding:10px;min-height:200px}
+.kcol-h{display:flex;justify-content:space-between;align-items:center;font-size:11px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);padding:4px 6px 8px}
+.kcol-h .count{background:#fff;border-radius:999px;min-width:22px;height:22px;display:inline-flex;align-items:center;justify-content:center;font-size:11px;padding:0 6px}
+.kcard{background:#fff;border:1px solid var(--border);border-radius:14px;padding:10px 12px;margin-top:8px;text-align:left;width:100%;transition:box-shadow .15s}
+.kcard:hover{box-shadow:0 4px 12px rgba(0,0,0,.08)}
+.kcard.late{border-color:var(--red-border);border-left:4px solid var(--red)}
+.k-model{font-weight:700;font-size:13px;margin-top:6px}
+.k-client{font-size:12px;color:var(--muted)}
+.k-date{display:flex;align-items:center;gap:4px;font-size:12px;margin-top:6px;font-weight:600}
+.k-empty{text-align:center;color:var(--muted);font-size:12px;padding:20px 0}
+
+/* ============================================================
+   JOBS TABLE · ALERTS · EMPTY STATES
+   ============================================================ */
+.filters{display:flex;gap:8px;flex-wrap:wrap;margin:14px 0 12px}
+.filters .input{min-height:42px;padding:6px 12px;font-size:13px;width:auto;flex:1 1 150px}
+.filters #jobs-q{flex:2 1 100%}
+.table-wrap{overflow-x:auto;background:#fff;border:1px solid var(--border);border-radius:18px}
+table{width:100%;border-collapse:collapse;font-size:13px}
+th{text-align:left;font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);padding:12px;border-bottom:1px solid var(--border);white-space:nowrap;font-weight:700}
+td{padding:12px;border-bottom:1px solid var(--border);vertical-align:middle;white-space:nowrap}
+tr:last-child td{border-bottom:0}
+tr.rowbtn{cursor:pointer;transition:background .15s}
+tr.rowbtn:hover,tr.rowbtn:focus-visible{background:#FAFAFA;outline-offset:-2px}
+.hide-m{display:none}
+.alerts{margin-top:14px}
+.alert{display:flex;gap:12px;align-items:center;width:100%;text-align:left;padding:14px;margin-bottom:10px;transition:box-shadow .15s}
+.alert:hover{box-shadow:0 4px 14px rgba(0,0,0,.06)}
+.alert .a-ic{width:40px;height:40px;border-radius:12px;display:inline-flex;align-items:center;justify-content:center;background:var(--bg);flex:0 0 40px}
+.alert.late{border-color:var(--red-border)}
+.alert.late .a-ic{background:var(--red-tint);color:var(--red)}
+.alert.signoff .a-ic{background:var(--ink);color:#fff}
+.alert .a-body{flex:1;min-width:0}
+.alert .a-top{display:flex;align-items:center;gap:8px}
+.alert .a-title{font-weight:700;font-size:14px;margin-top:2px}
+.alert .a-text{font-size:12px;color:var(--muted);margin-top:2px;line-height:1.4;white-space:normal}
+.alert.read{opacity:.72}
+.dot-unread{width:8px;height:8px;border-radius:50%;background:var(--red);display:inline-block}
+.alert > svg{color:var(--muted);flex:0 0 auto}
+.empty-state{text-align:center;padding:48px 20px;color:var(--muted)}
+.es-ic{width:56px;height:56px;border-radius:50%;background:#fff;border:1px solid var(--border);display:inline-flex;align-items:center;justify-content:center;margin-bottom:12px}
+.empty-state h3{color:var(--ink);font-size:17px;font-weight:800;margin-bottom:4px}
+.empty-state p{font-size:14px;margin-bottom:14px}
+
+/* ============================================================
+   JOB DETAIL
+   ============================================================ */
+.detail{display:none}
+.detail-open .detail{display:block}
+.detail-open .main{display:none}
+.detail-inner{padding:12px 16px calc(var(--tab-h) + 140px);max-width:720px;margin:0 auto}
+.back{display:inline-flex;align-items:center;gap:6px;font-size:14px;font-weight:600;min-height:44px;color:var(--muted)}
+.back:hover{color:var(--ink)}
+.dcard{padding:18px}
+.d-model{font-size:28px;font-weight:800;letter-spacing:-.03em;line-height:1.1;margin-top:2px}
+.d-client{font-size:15px;color:var(--muted);margin-top:4px}
+.d-spec{display:flex;align-items:center;gap:6px;font-size:13px;font-weight:600;margin-top:10px}
+.subcards{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:16px}
+.subcard{border:1px solid var(--border);border-radius:16px;padding:12px}
+.subcard .k,.date-row .k,.meta dt{font-size:10px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--muted)}
+.subcard .v{font-size:17px;font-weight:800;margin-top:5px;letter-spacing:-.01em}
+.subcard .s{font-size:12px;color:var(--muted);margin-top:2px}
+.subcard.late{border-color:var(--red-border);background:var(--red-tint)}
+.subcard.late .v,.subcard.late .s,.subcard.late .k{color:var(--red)}
+.dates{margin-top:12px;border:1px solid var(--border);border-radius:16px;padding:0 12px}
+.date-row{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:10px 0;min-height:54px}
+.date-row + .date-row{border-top:1px solid var(--border)}
+.date-row .v{font-weight:700;font-size:14px;margin-top:3px}
+.date-row .w{font-size:12px;color:var(--red);font-weight:600;margin-top:2px}
+.date-row.empty .v{color:var(--muted);font-weight:500}
+.meta{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:14px}
+.meta dd{margin-top:4px;font-size:13px;font-weight:600;line-height:1.35}
+
+/* stepper */
+.stepper{display:flex;overflow-x:auto;padding:16px 4px 6px;margin:4px -4px 0;scrollbar-width:none}
+.stepper::-webkit-scrollbar{display:none}
+.step{flex:0 0 96px;position:relative;text-align:center}
+.step:not(:last-child)::after{content:'';position:absolute;top:16px;left:calc(50% + 18px);width:calc(100% - 36px);height:2px;background:var(--border)}
+.step.done:not(:last-child)::after{background:var(--ink)}
+.step .circ{width:32px;height:32px;border-radius:50%;margin:0 auto;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;border:2px solid var(--border);background:#fff;color:var(--muted);position:relative;z-index:1}
+.step.done .circ{background:var(--ink);border-color:var(--ink);color:#fff}
+.step.cur .circ{border-color:var(--ink);color:var(--ink);box-shadow:0 0 0 4px #fff,0 0 0 5px var(--border)}
+.step.cur.late .circ{border-color:var(--red);color:var(--red)}
+.step .nm{font-size:12px;font-weight:700;margin-top:8px;line-height:1.2;padding:0 4px}
+.step.cur .nm{text-decoration:underline;text-underline-offset:3px}
+.step .sb{font-size:11px;color:var(--muted);margin-top:3px}
+.step.cur.late .sb{color:var(--red)}
+
+/* dark QC card */
+.darkcard{background:var(--ink);color:#fff;border-radius:var(--r);padding:18px;margin-top:12px}
+.darkcard .eyebrow{color:rgba(255,255,255,.6)}
+.qc-row{display:flex;gap:12px;align-items:center;margin-top:14px}
+.qc-row .avatar{background:#fff;color:var(--ink);width:44px;height:44px;font-size:14px}
+.qc-row .k2{font-size:10px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:rgba(255,255,255,.55)}
+.qc-name{font-size:17px;font-weight:800;margin-top:2px}
+.qc-meta{font-size:12px;color:rgba(255,255,255,.7);margin-top:1px}
+.quote{font-size:14px;line-height:1.5;color:rgba(255,255,255,.85);margin-top:14px;padding-left:12px;border-left:2px solid rgba(255,255,255,.3)}
+
+/* sections */
+.sec{padding:16px;margin-top:12px}
+.sec-h{display:flex;align-items:center;justify-content:space-between;gap:10px}
+.sec h2{font-size:17px;font-weight:800;margin-top:2px;letter-spacing:-.01em}
+.prog{font-size:13px;color:var(--muted);font-weight:600;margin-left:6px}
+.sel-sm{min-height:40px!important;padding:6px 32px 6px 12px!important;font-size:13px!important;width:auto!important;max-width:170px}
+.progress{height:6px;background:var(--border);border-radius:3px;margin:12px 0 4px;overflow:hidden}
+.progress span{display:block;height:100%;background:var(--ink);transition:width .25s}
+.lock{display:flex;align-items:center;gap:6px;font-size:12px;color:var(--muted);font-weight:600;margin:8px 0 0}
+.check-row{display:flex;align-items:flex-start;gap:12px;padding:12px 0;border-top:1px solid var(--border);min-height:44px}
+.check-list .check-row:first-child{border-top:0;margin-top:4px}
+.cbx{width:26px;height:26px;border-radius:8px;border:2px solid var(--ink);display:inline-flex;align-items:center;justify-content:center;flex:0 0 26px;margin-top:0;background:#fff;transition:background .15s,transform .15s;position:relative}
+.cbx::after{content:'';position:absolute;inset:-9px}
+.cbx:active{transform:scale(.92)}
+.cbx.on{background:var(--ink);color:#fff}
+.cbx:disabled{border-color:#C9C9C9;opacity:.8}
+.cbx.on:disabled{background:#6B6B6B;border-color:#6B6B6B}
+.check-row .t{font-size:14px;font-weight:600;line-height:1.35}
+.check-row .m{font-size:12px;color:var(--muted);margin-top:2px}
+.check-row.done .t{color:var(--muted)}
+.more{width:100%;min-height:44px;font-size:13px;font-weight:700;color:var(--ink);border-top:1px solid var(--border)}
+details.sec summary{list-style:none;display:flex;align-items:center;justify-content:space-between;cursor:pointer;min-height:44px;gap:10px}
+details.sec summary::-webkit-details-marker{display:none}
+details.sec summary > svg{transition:transform .2s;flex:0 0 auto;color:var(--muted)}
+details[open].sec summary > svg{transform:rotate(180deg)}
+.tl{list-style:none;margin:12px 0 0;padding:0}
+.tl li{display:flex;gap:12px;padding:10px 0;border-top:1px solid var(--border)}
+.tl .dot{width:10px;height:10px;border-radius:50%;background:var(--ink);margin-top:6px;flex:0 0 10px}
+.tl .dot.checklist,.tl .dot.note{background:#fff;box-shadow:inset 0 0 0 2px var(--muted)}
+.tl .dot.date_change{background:#E8A33D}
+.tl .dot.override{background:var(--red)}
+.tl .dot.delivered{background:#1E8E3E}
+.tl-t{font-size:13px;line-height:1.4}
+.tl-m{font-size:12px;color:var(--muted);margin-top:2px}
+.tl-type{text-transform:uppercase;letter-spacing:.08em;font-size:10px;font-weight:700}
+.tl-foot{display:flex;align-items:center;gap:6px;font-size:12px;color:var(--muted);margin-top:12px}
+.notes{list-style:none;margin:8px 0 0;padding:0}
+.notes li{padding:10px 0;border-top:1px solid var(--border)}
+.n-t{font-size:14px;line-height:1.45}
+.n-m{font-size:12px;color:var(--muted);margin-top:3px}
+.empty{font-size:13px;color:var(--muted);margin-top:8px}
+
+/* action bar */
+.actionbar{position:fixed;left:0;right:0;bottom:calc(var(--tab-h) + var(--sab));background:rgba(255,255,255,.94);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);border-top:1px solid var(--border);padding:10px 16px;display:flex;flex-wrap:wrap;gap:10px;z-index:25}
+.ab-hint{flex-basis:100%;font-size:12px;color:var(--red);font-weight:600;display:flex;gap:6px;align-items:flex-start;line-height:1.35}
+.ab-hint svg{flex:0 0 auto;margin-top:2px}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:48px;padding:0 20px;border-radius:999px;font-weight:700;font-size:15px;border:1.5px solid var(--ink);background:#fff;color:var(--ink);transition:transform .15s,opacity .15s,background .15s;white-space:nowrap}
+.btn:active{transform:scale(.98)}
+.btn-primary{background:var(--ink);color:#fff}
+.btn-primary[aria-disabled="true"],.btn:disabled{opacity:.38;cursor:not-allowed}
+.btn-sm{min-height:40px;padding:0 14px;font-size:13px}
+.btn-ghost{border-color:var(--border)}
+.btn-danger{border-color:var(--red);color:var(--red)}
+
+/* ============================================================
+   SHEET / MODAL · forms
+   ============================================================ */
+.backdrop{position:fixed;inset:0;background:rgba(0,0,0,.45);backdrop-filter:blur(3px);-webkit-backdrop-filter:blur(3px);z-index:40;opacity:0;transition:opacity .2s}
+.backdrop.show{opacity:1}
+.sheet{position:fixed;left:0;right:0;bottom:0;z-index:41;background:#fff;border-radius:28px 28px 0 0;max-height:92vh;max-height:92dvh;display:flex;flex-direction:column;transform:translateY(100%);transition:transform .25s cubic-bezier(.2,.8,.2,1);outline:none;box-shadow:0 -10px 40px rgba(0,0,0,.2)}
+.sheet.show{transform:none}
+.grabber{width:40px;height:4px;border-radius:2px;background:#D9D9D9;margin:10px auto 0;flex:0 0 auto}
+.sheet-head{padding:12px 20px 0;position:relative;flex:0 0 auto}
+.sheet-head h2{font-size:22px;font-weight:800;letter-spacing:-.02em;margin:6px 0 4px;padding-right:44px}
+.sheet-desc{font-size:14px;color:var(--muted);line-height:1.45}
+.sheet-x{position:absolute;right:12px;top:6px}
+.sheet-body{overflow:auto;padding:14px 20px 20px;flex:1 1 auto;min-height:0}
+.sheet-foot{display:flex;gap:10px;padding:12px 20px calc(16px + var(--sab));border-top:1px solid var(--border);flex:0 0 auto}
+.sheet-p{font-size:14px;line-height:1.5;color:var(--muted)}
+.infocard{display:flex;gap:12px;align-items:flex-start;background:var(--ink);color:#fff;border-radius:16px;padding:14px;font-size:14px;line-height:1.45}
+.infocard svg{flex:0 0 20px;margin-top:1px}
+.block{display:flex;flex-wrap:wrap;gap:10px;align-items:center;background:var(--red-tint);border:1px solid var(--red-border);color:var(--red);border-radius:16px;padding:12px;margin-top:12px;font-size:13px;font-weight:600;line-height:1.4}
+.block svg{flex:0 0 auto}.block > div{flex:1 1 200px}
+.block .btn{border-color:var(--red);color:var(--red)}
+.warn{display:flex;gap:10px;align-items:flex-start;background:var(--amber-bg);border:1px solid var(--amber-bd);color:var(--amber);border-radius:16px;padding:12px;margin-top:12px;font-size:13px;line-height:1.4}
+.q{font-size:15px;font-weight:800;margin:18px 0 10px}
+.people{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.person{border:1px solid var(--border);border-radius:16px;padding:12px;text-align:left;display:flex;gap:10px;align-items:center;min-height:64px;transition:background .15s,color .15s,border-color .15s;background:#fff}
+.person .avatar{width:34px;height:34px;font-size:12px}
+.person.sel{background:var(--ink);color:#fff;border-color:var(--ink)}
+.person.sel .avatar{background:#fff;color:var(--ink)}
+.person .n,.person .r{display:block}
+.person .n{font-size:14px;font-weight:700;line-height:1.2}
+.person .r{font-size:11px;color:var(--muted);margin-top:2px}
+.person.sel .r{color:rgba(255,255,255,.7)}
+.person.other{border-style:dashed;grid-column:1/-1;justify-content:center;font-weight:600;font-size:14px;color:var(--muted)}
+.person:disabled{opacity:.45;cursor:not-allowed}
+.field{display:block;margin-top:12px}
+.field .l{display:block;font-size:12px;font-weight:700;margin-bottom:6px}
+.input{width:100%;min-height:46px;border:1px solid var(--border);border-radius:14px;padding:10px 14px;background:#fff;font-size:15px;outline:none;transition:border-color .15s}
+.input:focus{border-color:var(--ink)}
+select.input{appearance:none;-webkit-appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%230B0B0B' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 12px center;padding-right:36px}
+textarea.input{min-height:84px;resize:vertical;line-height:1.45}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.confirm{display:flex;gap:12px;align-items:flex-start;margin-top:16px;font-size:14px;line-height:1.45;cursor:pointer}
+.confirm input{width:22px;height:22px;flex:0 0 22px;accent-color:var(--ink);margin:1px 0 0;cursor:pointer}
+.foot-note{font-size:12px;color:var(--muted);margin-top:14px;line-height:1.45}
+.err{color:var(--red);font-size:13px;font-weight:600;min-height:18px;margin-top:8px}
+.menu-sec{font-size:11px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);margin:16px 0 6px}
+.menu-sec:first-child{margin-top:0}
+.menu-row{display:flex;align-items:center;gap:12px;width:100%;min-height:52px;padding:8px 10px;border-radius:14px;text-align:left;font-weight:600;font-size:14px;transition:background .15s}
+.menu-row:hover{background:var(--bg)}
+.menu-row.cur{background:var(--ink);color:#fff}
+.menu-row.cur .avatar{background:#fff;color:var(--ink)}
+.menu-row .r{font-size:12px;color:var(--muted);font-weight:500;display:block;margin-top:1px}
+.menu-row.cur .r{color:rgba(255,255,255,.7)}
+.menu-row > svg:first-child{color:var(--muted);flex:0 0 auto;width:34px}
+.menu-row > span:not(.avatar){flex:1}
+.search-box{display:flex;align-items:center;gap:10px;border:1px solid var(--border);border-radius:14px;padding:0 12px}
+.search-box .input{border:0;padding-left:4px}
+.search-results{margin-top:10px}
+.srow{display:flex;align-items:center;gap:12px;width:100%;min-height:58px;padding:8px 10px;border-radius:14px;text-align:left;transition:background .15s}
+.srow:hover{background:var(--bg)}
+.s-main{flex:1;min-width:0;display:flex;flex-direction:column;font-size:14px}
+.s-main .muted{font-size:12px}
+
+/* ============================================================
+   LOGIN · GUIDE · TOAST
+   ============================================================ */
+.login{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px 16px}
+.login-card{width:100%;max-width:400px;background:#fff;border:1px solid var(--border);border-radius:24px;padding:28px 24px}
+.login-card h1{margin:6px 0 4px;font-size:28px}
+.login-card .btn-primary{width:100%;margin-top:16px}
+.demo-accounts{margin-top:20px;padding-top:16px;border-top:1px solid var(--border)}
+.demo-chips{display:flex;gap:8px;margin-top:10px;flex-wrap:wrap}
+.demo-chip{width:44px;height:44px;border-radius:50%;border:1px solid var(--border);background:#fff;font-size:12px;font-weight:700;display:inline-flex;align-items:center;justify-content:center;transition:background .15s,color .15s,border-color .15s,transform .15s}
+.demo-chip:hover{transform:translateY(-1px);border-color:var(--ink)}
+.demo-chip.on{background:var(--ink);color:#fff;border-color:var(--ink)}
+.login-hint{font-size:12px;color:var(--muted);margin-top:10px;min-height:16px}
+.guide{position:fixed;left:12px;right:12px;top:calc(var(--top-h) + 10px);z-index:35;background:var(--ink);color:#fff;border-radius:18px;padding:14px 16px;box-shadow:0 12px 30px rgba(0,0,0,.3);animation:rise .25s ease}
+.guide .eyebrow{color:rgba(255,255,255,.6)}
+.guide h3{font-size:16px;font-weight:800;margin-top:6px}
+.guide p{font-size:13px;line-height:1.45;color:rgba(255,255,255,.8);margin-top:4px}
+.g-top{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.g-x{color:#fff;margin:-8px -10px -8px 0}.g-x:hover{background:rgba(255,255,255,.12)}
+.g-btns{display:flex;gap:8px;margin-top:12px;flex-wrap:wrap}
+.guide .btn{border-color:rgba(255,255,255,.6);color:#fff;background:transparent;min-height:40px;font-size:13px;padding:0 14px}
+.guide .btn-primary{background:#fff;color:var(--ink);border-color:#fff}
+.toast-root{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(var(--tab-h) + 16px + var(--sab));z-index:60;display:flex;flex-direction:column;gap:8px;align-items:center;pointer-events:none;width:calc(100% - 32px);max-width:440px}
+.toast{background:var(--ink);color:#fff;padding:12px 16px;border-radius:14px;font-size:14px;font-weight:600;box-shadow:0 10px 30px rgba(0,0,0,.25);animation:rise .25s ease;display:flex;gap:10px;align-items:center;line-height:1.35;max-width:100%}
+.toast svg{flex:0 0 auto}
+.toast.err{background:var(--red)}
+@keyframes rise{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+
+/* ============================================================
+   RESPONSIVE
+   ============================================================ */
+@media (min-width:640px){
+  .hide-m{display:table-cell}
+  .filters #jobs-q{flex:2 1 240px}
+  .main{max-width:860px;padding:24px 24px calc(var(--tab-h) + 32px)}
+  .detail-inner{max-width:860px;padding:20px 24px calc(var(--tab-h) + 140px)}
+  .sheet{left:50%;right:auto;bottom:auto;top:50%;width:min(600px,calc(100vw - 32px));transform:translate(-50%,-46%) scale(.98);opacity:0;border-radius:24px;max-height:88vh;transition:transform .2s,opacity .2s}
+  .sheet.show{transform:translate(-50%,-50%) scale(1);opacity:1}
+  .grabber{display:none}
+  .sheet-head{padding-top:22px}
+  .sheet-foot{padding-bottom:16px}
+  .stats{grid-template-columns:repeat(4,1fr)}
+}
+@media (min-width:1024px){
+  .app{display:flex;min-height:100vh}
+  .sidebar{display:flex;flex-direction:column;width:240px;flex:0 0 240px;border-right:1px solid var(--border);background:#fff;position:sticky;top:0;height:100vh;padding:20px 16px 16px}
+  .tabbar{display:none}
+  .topbar{padding-left:24px}
+  .topbar .wordmark{display:none}
+  .topbar-user{display:flex}
+  .shell{flex:1;min-width:0}
+  .columns{display:flex;align-items:flex-start}
+  .main{flex:1;min-width:0;max-width:1280px;margin:0;padding:28px 32px 48px}
+  .detail-open .main{display:block}
+  .detail{display:none}
+  .detail-open .detail{display:flex;flex-direction:column;width:500px;flex:0 0 500px;border-left:1px solid var(--border);background:#fff;position:sticky;top:var(--top-h);height:calc(100vh - var(--top-h));overflow:auto}
+  .detail-inner{padding:20px 24px 24px;max-width:none;margin:0}
+  .detail .dcard,.detail .sec,.detail .darkcard{border-radius:18px}
+  .actionbar{position:sticky;left:auto;right:auto;bottom:0;margin-top:auto;padding:12px 24px}
+  h1{font-size:36px}
+  .desk-only{display:inline-flex}
+  .cards-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:12px}
+  .cards-grid .job-card{margin-bottom:0}
+  .toast-root{bottom:24px}
+  .guide{left:auto;right:24px;width:400px;top:calc(var(--top-h) + 16px)}
+  .stepper{padding-top:18px}
+}
+@media (min-width:1440px){
+  .cards-grid{grid-template-columns:repeat(3,1fr)}
+  .detail-open .cards-grid{grid-template-columns:repeat(2,1fr)}
+  .detail-open .detail{width:540px;flex-basis:540px}
+}
+@media (prefers-reduced-motion:reduce){
+  *,*::before,*::after{transition:none!important;animation:none!important}
+}
+
+/* ============================================================
+   PRINT · job record
+   ============================================================ */
+.print-only{display:none}
+@media print{
+  @page{margin:14mm}
+  body{background:#fff;font-size:12px}
+  .topbar,.tabbar,.sidebar,.actionbar,.back,.toast-root,.guide,#sheet-root,.no-print,.more,.sel-sm{display:none!important}
+  .main{display:none!important}
+  .detail{display:block!important;position:static!important;width:auto!important;height:auto!important;border:0!important;overflow:visible!important}
+  .detail-inner{padding:0!important;max-width:none!important}
+  .card,.dcard,.sec,.darkcard{break-inside:avoid;box-shadow:none;border-radius:8px}
+  .darkcard{background:#fff!important;color:#000!important;border:1px solid #000}
+  .darkcard .eyebrow,.quote,.qc-meta,.qc-row .k2{color:#000!important}
+  .qc-row .avatar{border:1px solid #000}
+  .stepper{overflow:visible;flex-wrap:wrap}
+  .print-only{display:block!important}
+  .print-only table{width:100%;border-collapse:collapse;font-size:11px}
+  .print-only th,.print-only td{border:1px solid #999;padding:6px;white-space:normal;vertical-align:top}
+  details.sec{border:1px solid #ccc}
+}
+</style>
+</head>
+<body>
+<div id="login-root"></div>
+<div id="app" class="app">
+  <aside id="sidebar" class="sidebar" aria-label="Sidebar">
+    <a class="wordmark" href="#/board" aria-label="BLINDHASA home" style="align-self:flex-start">BLINDHASA</a>
+    <nav id="sidenav" class="sidenav" aria-label="Primary"></nav>
+    <div id="sidefoot" class="side-foot"></div>
+  </aside>
+  <div class="shell">
+    <header class="topbar">
+      <a class="wordmark" href="#/board" aria-label="BLINDHASA home">BLINDHASA</a>
+      <div id="topbar-user" class="topbar-user"></div>
+      <span class="spacer"></span>
+      <button class="icon-btn" data-action="search" aria-label="Search jobs">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+      </button>
+      <button id="avatar-btn" class="avatar" data-action="menu" aria-haspopup="dialog" aria-label="Account and settings">SM</button>
+    </header>
+    <div class="columns">
+      <main id="main" class="main" tabindex="-1"></main>
+      <section id="detail" class="detail" aria-label="Job detail"></section>
+    </div>
+  </div>
+  <nav id="tabbar" class="tabbar" aria-label="Primary"></nav>
+</div>
+<div id="sheet-root"></div>
+<div id="guide-root"></div>
+<div id="toast-root" class="toast-root" role="status" aria-live="polite"></div>
+
+<script>
+/* ============================================================
+   CONFIG
+   ============================================================ */
+const CONFIG = {
+  today: new Date(2026, 10, 12, 16, 5, 0),      // App clock: Thu Nov 12, 2026 · 4:05 PM
+  storageKey: 'blindhasa.workshop.v2',
+  plant: 'Armoring line · Planta 1',
+  dueWindowDays: 7
+};
+const BOOT_MS = Date.now();
+const now = () => new Date(CONFIG.today.getTime() + (Date.now() - BOOT_MS));
+
+const STAGES = [
+  { id:'intake',     name:'Intake' },
+  { id:'teardown',   name:'Teardown' },
+  { id:'armor',      name:'Armor install' },
+  { id:'reassembly', name:'Reassembly' },
+  { id:'paint',      name:'Paint & finish' },
+  { id:'qc',         name:'Quality check', inspector:true },
+  { id:'delivery',   name:'Delivery', handover:true }
+];
+const ARMOR_SPECS = { B4:'Handgun (.44 Magnum)', B5:'Assault rifle (5.56×45 mm)', B6:'High-power rifle (7.62×51 mm)', B7:'Armor-piercing rifle (7.62×51 mm AP)' };
+const TEAMS = ['Intake','Teardown crew','Armoring crew A','Armoring crew B','Assembly crew B','Paint booth','QC bay','Delivery desk'];
+const NEXT_ACTIONS = {
+  intake:'Photograph vehicle, confirm spec with client', teardown:'Strip interior, remove glass, tag harness',
+  armor:'Fit floor, firewall and door panels', reassembly:'Rehang doors, reconnect and test systems',
+  paint:'Prep, color match, clear coat', qc:'Final quality check sign-off by QC inspector', delivery:'Client walkthrough and handover'
+};
+const FIELD_LABEL = { promisedDate:'Promised delivery', forecastReadyDate:'Forecast ready date', actualHandoverDate:'Actual handover date' };
+
+/* ---------- inline SVG icons ---------- */
+const svg = (d, s = 18) => `<svg width="${s}" height="${s}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">${d}</svg>`;
+const P = {
+  shield:'<path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>',
+  alert:'<path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><path d="M12 9v4M12 17h.01"/>',
+  clock:'<circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/>',
+  check:'<path d="M20 6 9 17l-5-5"/>'
+};
+const ICON = {
+  search: svg('<circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/>', 20),
+  plus: svg('<path d="M12 5v14M5 12h14"/>', 22),
+  shield: svg(P.shield, 12),
+  shieldLg: svg(P.shield, 20),
+  shieldCheck: svg(P.shield + '<path d="m9 12 2 2 4-4"/>', 24),
+  badge: svg('<path d="M3.85 8.62a4 4 0 0 1 4.78-4.77 4 4 0 0 1 6.74 0 4 4 0 0 1 4.78 4.78 4 4 0 0 1 0 6.74 4 4 0 0 1-4.77 4.78 4 4 0 0 1-6.75 0 4 4 0 0 1-4.78-4.77 4 4 0 0 1 0-6.76Z"/><path d="m9 12 2 2 4-4"/>', 13),
+  calendar: svg('<rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/>', 14),
+  chevron: svg('<path d="m9 18 6-6-6-6"/>', 18),
+  chevronDown: svg('<path d="m6 9 6 6 6-6"/>', 18),
+  check: svg(P.check, 14),
+  checkLg: svg(P.check, 18),
+  checkCircle: svg('<circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/>', 18),
+  alert: svg(P.alert, 16),
+  alertLg: svg(P.alert, 18),
+  bell: svg('<path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/>', 22),
+  board: svg('<rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/>', 22),
+  jobs: svg('<path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"/>', 22),
+  kanban: svg('<rect x="3" y="3" width="5" height="18" rx="1"/><rect x="10" y="3" width="5" height="12" rx="1"/><rect x="17" y="3" width="5" height="15" rx="1"/>', 16),
+  grid: svg('<rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/>', 16),
+  note: svg('<path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>', 18),
+  x: svg('<path d="M18 6 6 18M6 6l12 12"/>', 20),
+  arrowLeft: svg('<path d="m12 19-7-7 7-7M19 12H5"/>', 18),
+  lock: svg('<rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/>', 14),
+  print: svg('<path d="M6 9V2h12v7"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/>', 18),
+  clock: svg(P.clock, 14),
+  clockLg: svg(P.clock, 18),
+  edit: svg('<path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/>', 14),
+  download: svg('<path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/>', 18),
+  upload: svg('<path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M17 8l-5-5-5 5M12 3v12"/>', 18),
+  refresh: svg('<path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8M21 3v5h-5M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16M8 16H3v5"/>', 18),
+  play: svg('<path d="m6 4 14 8-14 8V4z"/>', 18),
+  logout: svg('<path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9"/>', 18),
+  trend: svg('<path d="M22 7 13.5 15.5 8.5 10.5 2 17M16 7h6v6"/>', 18),
+  pen: svg('<path d="M12 20h9M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"/>', 18)
+};
+const ALERT_ICON = { late: ICON.alertLg, due: ICON.clockLg, forecast: ICON.trend, signoff: ICON.pen };
+
+/* ============================================================
+   SEED DATA
+   ============================================================ */
+/* Dummy credentials for the demo login (all passwords: demo1234). Replace with real auth in the hosted tier. */
+const SEED_USERS = [
+  { id:'sm', name:'Sofía Méndez',    initials:'SM', role:'Production manager', email:'sofia@blindhasa.com',   password:'demo1234', canSignStages:true, isManager:true, canEditDates:true },
+  { id:'hi', name:'Héctor Ibarra',   initials:'HI', role:'Shop manager',       email:'hector@blindhasa.com',  password:'demo1234', canSignStages:true, isManager:true, canEditDates:true },
+  { id:'rs', name:'Ricardo Soto',    initials:'RS', role:'QC inspector',       email:'ricardo@blindhasa.com', password:'demo1234', canSignStages:true, isInspector:true },
+  { id:'gm', name:'General Manager', initials:'GM', role:'GM',                 email:'gm@blindhasa.com',      password:'demo1234', canSignStages:true, canDeliver:true, isManager:true, canEditDates:true },
+  { id:'ow', name:'Owner',           initials:'OW', role:'Owner',              email:'owner@blindhasa.com',   password:'demo1234', isManager:true, canEditDates:true }
+];
+const EXTRA_PEOPLE = { mr:{ name:'Marco Ruiz', initials:'MR', role:'Armoring lead' } };
+
+const QC_POSITIONS = ['Front left door','Front right door','Rear left door','Rear right door','Tailgate','Roof','Floor','Firewall','A-pillars','B-pillars','C-pillars','Windshield frame','Rear glass frame','Front left glass frame','Front right glass frame','Rear left glass frame','Rear right glass frame'];
+const CHECKLIST_TEMPLATES = {
+  intake: ['Vehicle received & photographed (360°)','Client spec & armor level confirmed','Pre-existing damage logged','Keys, documents & accessories inventoried','Battery, fluids & tire condition checked'],
+  teardown: ['Interior trim removed & labeled','Glass removed & stored','Doors stripped to shell','Wiring harness tagged','Parts bagged & shelved by zone'],
+  armor: ['Floor & firewall panels fitted','Door panels & overlaps fitted','Pillar armor fitted','Roof panel fitted','Ballistic glass installed','Welds inspected & sealed'],
+  reassembly: ['Doors rehung & aligned','Interior trim reinstalled','Wiring reconnected & tested','Suspension & brake upgrade fitted','Run-flat inserts installed & torqued'],
+  paint: ['Body prep & primer','Color match approved','Clear coat applied & cured','Trim & badges reinstalled','Detail & polish'],
+  qc: ['Ballistic certificate matches armor level','Road test · 20 km mixed terrain','Water test · high pressure, 15 min','Door closing effort within spec (all doors + tailgate)','Run-flat inserts torque verified','Suspension upgrade load test','Brake upgrade · stopping distance test','Electrical · windows, locks, siren, intercom','Interior trim fit & finish','Weight ticket recorded (front / rear axle)']
+    .concat(QC_POSITIONS.map(p => 'Overlap & fit · ' + p))
+    .concat(['Glass seal & optical clarity · Windshield','Glass seal & optical clarity · Front left','Glass seal & optical clarity · Front right','Glass seal & optical clarity · Rear left','Glass seal & optical clarity · Rear right'])
+    .concat(['Fire suppression armed','Emergency escape function tested','Battery relocation secured','Fuel tank protection fitted','Exhaust shield fitted','Final clean & protective wrap']),
+  delivery: ['Client walkthrough & demonstration','Documents & ballistic certificate handed over','Spare run-flat kit & tools handed over','Acceptance form signed by client']
+};
+
+/* Compact job specs → expanded by buildJob() into the full data model.
+   signoffs: [stageId, who, 'YYYY-MM-DDTHH:MM', note]  changes: [at, userId, field, from, to, reason]  notes: [at, userId, text] */
+const SEED_JOB_SPECS = [
+  { id:'BLH-2041', year:2026, make:'Toyota', model:'Land Cruiser 300', client:'Grupo Altamira', armorLevel:'B6', armorSpec:ARMOR_SPECS.B6, team:'Armoring crew A', nextAction:'Finish B-pillar overlaps, then fit the ballistic glass set', stage:2, promised:'2026-11-06', forecast:'2026-11-18', created:'2026-10-19T09:10', curDone:4,
+    signoffs:[['intake','sm','2026-10-19T11:30',''],['teardown','mr','2026-10-28T17:15','Shell stripped and harness tagged. Minor corrosion on front door frames — flagged for the armor team.']],
+    changes:[['2026-11-09T10:12','sm','forecastReadyDate','2026-11-10','2026-11-18','Ballistic glass supplier delay (new ETA Nov 14)']],
+    notes:[['2026-11-09T10:15','sm','Client informed of the new forecast. They accept Nov 18 but want weekly photos.']] },
+  { id:'BLH-2038', year:2025, make:'Chevrolet', model:'Suburban LT', client:'Sentinel Executive Protection', armorLevel:'B6', armorSpec:ARMOR_SPECS.B6, team:'Assembly crew B', nextAction:'Reconnect harness, test windows and locks', stage:3, promised:'2026-11-10', forecast:'2026-11-14', created:'2026-10-12T08:40', curDone:3,
+    signoffs:[['intake','sm','2026-10-12T10:05',''],['teardown','hi','2026-10-20T16:20',''],['armor','hi','2026-11-05T18:05','All overlaps verified. Welds sealed and inspected.']],
+    changes:[['2026-11-06T09:00','hi','forecastReadyDate','2026-11-10','2026-11-14','Door alignment rework after armor install']],
+    notes:[] },
+  { id:'BLH-2035', year:2025, make:'Lexus', model:'LX 600', client:'Corporativo Vela', armorLevel:'B6', armorSpec:ARMOR_SPECS.B6, team:'QC bay', nextAction:'Final quality check sign-off by QC inspector', stage:5, promised:'2026-11-16', forecast:'2026-11-13', created:'2026-10-05T09:00', curDone:38, curBy:'Ricardo Soto',
+    signoffs:[['intake','sm','2026-10-05T11:10',''],['teardown','hi','2026-10-13T15:45',''],['armor','mr','2026-10-27T17:30','Full B6 kit fitted; glass set installed.'],['reassembly','hi','2026-11-04T16:10',''],['paint','hi','2026-11-10T09:30','Color match approved by client on site.']],
+    notes:[['2026-11-11T17:20','rs','Road + water test done. Ready for final sign-off tomorrow morning.']] },
+  { id:'BLH-2033', year:2025, make:'Land Rover', model:'Range Rover LWB', client:'Atlas Diplomatic Services', armorLevel:'B6', armorSpec:ARMOR_SPECS.B6, team:'Delivery desk', nextAction:'Client walkthrough and handover Fri Nov 13, 10:00', stage:6, promised:'2026-11-13', forecast:'2026-11-13', created:'2026-09-28T08:30', curDone:2, curBy:'Sofía Méndez',
+    signoffs:[['intake','sm','2026-09-28T10:00',''],['teardown','hi','2026-10-06T16:30',''],['armor','hi','2026-10-21T17:40',''],['reassembly','hi','2026-10-30T15:20',''],['paint','hi','2026-11-06T12:00',''],['qc','rs','2026-11-10T15:40','Final QC passed: 38/38 checklist items, road + water test passed, overlaps checked.']],
+    notes:[['2026-11-11T09:05','sm','Client confirmed pickup Friday 10:00. Prepare certificate folder and spare run-flat kit.']] },
+  { id:'BLH-2044', year:2026, make:'Toyota', model:'Sequoia Capstone', client:'Banco del Norte', armorLevel:'B4', armorSpec:ARMOR_SPECS.B4, team:'Teardown crew', nextAction:'Remove glass and door trims', stage:1, promised:'2026-12-04', forecast:'2026-12-02', created:'2026-11-03T09:20', curDone:2,
+    signoffs:[['intake','sm','2026-11-03T11:00','']], notes:[] },
+  { id:'BLH-2045', year:2026, make:'GMC', model:'Yukon Denali', client:'Familia Orozco', armorLevel:'B6', armorSpec:ARMOR_SPECS.B6, team:'Intake', nextAction:'Confirm spec with client, inventory accessories', stage:0, promised:'2026-12-18', forecast:'2026-12-15', created:'2026-11-10T14:00', curDone:3, curBy:'Sofía Méndez', signoffs:[], notes:[] },
+  { id:'BLH-2040', year:2025, make:'Jeep', model:'Grand Cherokee L', client:'Minera San Rafael', armorLevel:'B5', armorSpec:ARMOR_SPECS.B5, team:'Paint booth', nextAction:'Clear coat cure, then reinstall trim', stage:4, promised:'2026-11-18', forecast:'2026-11-17', created:'2026-10-08T09:00', curDone:2,
+    signoffs:[['intake','sm','2026-10-08T10:30',''],['teardown','hi','2026-10-15T16:00',''],['armor','mr','2026-10-29T17:00',''],['reassembly','hi','2026-11-07T13:30','']], notes:[] },
+  { id:'BLH-2043', year:2026, make:'Ford', model:'F-150 Platinum', client:'Logística Peninsular', armorLevel:'B4', armorSpec:ARMOR_SPECS.B4, team:'Armoring crew B', nextAction:'Fit floor and firewall panels', stage:2, promised:'2026-12-11', forecast:'2026-12-09', created:'2026-10-26T08:50', curDone:1,
+    signoffs:[['intake','sm','2026-10-26T10:10',''],['teardown','hi','2026-11-02T17:00','']], notes:[] },
+  { id:'BLH-2029', year:2025, make:'Mercedes-Benz', model:'G 580', client:'Hotelera Pacífico', armorLevel:'B6', armorSpec:ARMOR_SPECS.B6, team:'Delivery desk', nextAction:'Delivered', stage:6, delivered:true, actual:'2026-10-29', promised:'2026-10-30', forecast:'2026-10-29', created:'2026-09-07T09:00',
+    signoffs:[['intake','sm','2026-09-07T10:30',''],['teardown','hi','2026-09-15T16:00',''],['armor','hi','2026-10-01T17:30',''],['reassembly','hi','2026-10-12T15:00',''],['paint','hi','2026-10-21T11:00',''],['qc','rs','2026-10-27T14:10','QC passed 38/38. Road + water test OK.'],['delivery','gm','2026-10-29T11:20','Handed over to client representative. Certificate folder delivered.']], notes:[] },
+  { id:'BLH-2031', year:2025, make:'Cadillac', model:'Escalade ESV', client:'Sentinel Executive Protection', armorLevel:'B6', armorSpec:ARMOR_SPECS.B6, team:'Delivery desk', nextAction:'Delivered', stage:6, delivered:true, actual:'2026-11-05', promised:'2026-11-04', forecast:'2026-11-05', created:'2026-09-14T09:00',
+    signoffs:[['intake','sm','2026-09-14T10:00',''],['teardown','hi','2026-09-22T16:45',''],['armor','mr','2026-10-08T17:10',''],['reassembly','hi','2026-10-19T15:30',''],['paint','hi','2026-10-29T10:00','Rear quarter re-sprayed after client review.'],['qc','rs','2026-11-03T16:00','QC passed 38/38 after re-spray.'],['delivery','gm','2026-11-05T10:15','Delivered one day late; client accepted with signed acceptance form.']],
+    changes:[['2026-10-30T09:00','sm','forecastReadyDate','2026-11-04','2026-11-05','Paint re-spray on rear quarter']], notes:[] }
+];
+
+/* ============================================================
+   HELPERS
+   ============================================================ */
+const $ = (sel, root = document) => root.querySelector(sel);
+const $id = id => document.getElementById(id);
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' }[c]));
+const uid = () => Math.random().toString(36).slice(2, 10);
+const deepClone = o => JSON.parse(JSON.stringify(o));
+const pad = n => String(n).padStart(2, '0');
+const isDesktop = () => window.matchMedia('(min-width:1024px)').matches;
+const initialsOf = name => (name.trim().split(/\s+/).slice(0, 2).map(w => w[0]).join('').toUpperCase() || '?');
+const MONTHS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+const DAYS = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+
+function toDate(v){
+  if (v instanceof Date) return new Date(v.getTime());
+  if (!v) return null;
+  const m = String(v).match(/^(\d{4})-(\d{2})-(\d{2})(?:[T ](\d{2}):(\d{2})(?::(\d{2}))?)?/);
+  if (!m){ const d = new Date(v); return isNaN(d) ? null : d; }
+  return new Date(+m[1], +m[2] - 1, +m[3], +(m[4] || 0), +(m[5] || 0), +(m[6] || 0));
+}
+function isoDate(d){ return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`; }
+function isoDT(d){ return `${isoDate(d)}T${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`; }
+function addDays(v, n){ const d = toDate(v); d.setDate(d.getDate() + n); return d; }
+const todayISO = () => isoDate(CONFIG.today);
+function dayDiff(a, b){ const A = toDate(a), B = toDate(b); if (!A || !B) return 0; A.setHours(0,0,0,0); B.setHours(0,0,0,0); return Math.round((B - A) / 86400000); }
+function fmtD(v){ const d = toDate(v); return d ? `${MONTHS[d.getMonth()]} ${d.getDate()}` : '—'; }
+function fmtDL(v){ const d = toDate(v); return d ? `${DAYS[d.getDay()]}, ${MONTHS[d.getMonth()]} ${d.getDate()}` : '—'; }
+function fmtT(v){ const d = toDate(v); if (!d) return ''; let h = d.getHours(); const m = d.getMinutes(), ap = h >= 12 ? 'PM' : 'AM'; h = h % 12 || 12; return `${h}:${pad(m)} ${ap}`; }
+function fmtDT(v){ const d = toDate(v); return d ? `${fmtD(d)}, ${fmtT(d)}` : '—'; }
+function fmtDTY(v){ const d = toDate(v); return d ? `${MONTHS[d.getMonth()]} ${d.getDate()}, ${d.getFullYear()}` : '—'; }
+function plural(n, w){ return `${n} ${w}${n === 1 ? '' : 's'}`; }
+
+/* ============================================================
+   STATE / STORAGE  (localStorage with in-memory fallback)
+   ============================================================ */
+let state = null;
+let storageOk = true;
+const ui = {
+  route:{ view:'board' }, lastTab:'board', lastKey:null, detailId:null,
+  boardFilter:'all', stageFilter:'all', boardView:'cards',
+  jobs:{ q:'', stage:'all', armor:'all', status:'all', client:'all', sort:'promised' },
+  checklistStage:null, clExpanded:false, historyOpen:true, loginSel:null, afterLogin:null
+};
+
+function personOf(who){
+  if (typeof who === 'object') return { userId:null, name:who.name, initials:who.initials || initialsOf(who.name), role:who.role };
+  const u = SEED_USERS.find(x => x.id === who);
+  if (u) return { userId:u.id, name:u.name, initials:u.initials, role:u.role };
+  const p = EXTRA_PEOPLE[who];
+  return { userId:null, name:p.name, initials:p.initials, role:p.role };
+}
+function buildChecklist(){
+  const out = [];
+  STAGES.forEach(st => CHECKLIST_TEMPLATES[st.id].forEach((text, i) => out.push({ id:`${st.id}-${i + 1}`, stage:st.id, text, done:false, doneBy:null, doneAt:null })));
+  return out;
+}
+function buildJob(s){
+  const createdAt = s.created + ':00';
+  const signoffs = {};
+  (s.signoffs || []).forEach(([stageId, who, at, note]) => {
+    const p = personOf(who);
+    signoffs[stageId] = { userId:p.userId, name:p.name, initials:p.initials, role:p.role, at:at + ':00', note:note || '', signedInAs:p.userId || 'hi' };
+  });
+  const checklist = buildChecklist();
+  const nowMs = now().getTime();
+  STAGES.forEach((st, idx) => {
+    const items = checklist.filter(c => c.stage === st.id);
+    const so = signoffs[st.id];
+    const prev = idx > 0 ? signoffs[STAGES[idx - 1].id] : null;
+    const enteredMs = toDate(prev ? prev.at : createdAt).getTime();
+    if (idx < s.stage || s.delivered){
+      const endMs = so ? toDate(so.at).getTime() - 15 * 60000 : nowMs;
+      const startMs = Math.max(enteredMs + 3600000, endMs - items.length * 3 * 3600000);
+      items.forEach((c, i) => { c.done = true; c.doneBy = so ? so.name : 'Héctor Ibarra'; c.doneAt = isoDT(new Date(startMs + (endMs - startMs) * (i + 1) / items.length)); });
+    } else if (idx === s.stage){
+      const n = Math.min(s.curDone || 0, items.length);
+      if (n){
+        const startMs = Math.max(enteredMs + 3600000, nowMs - n * Math.min(7, 40 / n) * 3600000);
+        const endMs = nowMs - 20 * 60000;
+        items.slice(0, n).forEach((c, i) => { c.done = true; c.doneBy = s.curBy || 'Héctor Ibarra'; c.doneAt = isoDT(new Date(startMs + (endMs - startMs) * (i + 1) / n)); });
+      }
+    }
+  });
+  const history = [{ id:uid(), at:createdAt, userId:'sm', type:'created', text:`Job created at Intake · ${s.year} ${s.make} ${s.model} for ${s.client} · ${s.armorLevel} · promised ${fmtD(s.promised)}` }];
+  Object.entries(signoffs).forEach(([stageId, so]) => {
+    const idx = STAGES.findIndex(x => x.id === stageId);
+    const isHand = stageId === 'delivery';
+    const text = isHand
+      ? `Handover signed off by ${so.name} (${so.role}) · actual handover ${fmtD(s.actual)}`
+      : `${STAGES[idx].name} signed off by ${so.name} (${so.role}) → ${STAGES[idx + 1].name}`;
+    history.push({ id:uid(), at:so.at, userId:so.signedInAs, type:isHand ? 'delivered' : 'stage_signoff', text:text + (so.note ? ` — “${so.note}”` : '') });
+  });
+  (s.changes || []).forEach(([at, by, field, from, to, reason]) => history.push({ id:uid(), at:at + ':00', userId:by, type:'date_change', text:`${FIELD_LABEL[field]} changed ${fmtD(from)} → ${fmtD(to)} — reason: ${reason}` }));
+  const notes = (s.notes || []).map(([at, by, text]) => ({ id:uid(), at:at + ':00', userId:by, text }));
+  notes.forEach(n => history.push({ id:uid(), at:n.at, userId:n.userId, type:'note', text:`Note added: “${n.text}”` }));
+  history.sort((a, b) => a.at < b.at ? -1 : a.at > b.at ? 1 : 0);
+  return {
+    id:s.id, armorLevel:s.armorLevel, year:s.year, make:s.make, model:s.model, client:s.client, armorSpec:s.armorSpec,
+    currentStageIndex:s.stage, assignedTeam:s.team, nextAction:s.nextAction,
+    promisedDate:s.promised, forecastReadyDate:s.forecast, actualHandoverDate:s.actual || null, delivered:!!s.delivered,
+    createdAt, checklist, stageSignoffs:signoffs, history, notes
+  };
+}
+function seedState(){
+  return {
+    version:2, users:deepClone(SEED_USERS), jobs:SEED_JOB_SPECS.map(buildJob), currentUserId:null,   // nobody signed in → login page first
+    readAlerts:['due:BLH-2033', 'due:BLH-2040', 'forecast:BLH-2038', 'signoff:BLH-2033'], seq:2046, prefs:{}
+  };
+}
+/* returns an error string, or null when the payload is a valid BLINDHASA dataset */
+function validateData(d){
+  if (!d || typeof d !== 'object' || Array.isArray(d)) return 'Not a JSON object.';
+  if (!Array.isArray(d.jobs)) return 'Missing "jobs" array.';
+  const seen = new Set();
+  for (const j of d.jobs){
+    if (typeof j.id !== 'string' || !/^BLH-\d+$/.test(j.id)) return `Job with an invalid id: ${JSON.stringify(j.id)}`;
+    if (seen.has(j.id)) return `Duplicate job id ${j.id}`;
+    seen.add(j.id);
+    if (!Number.isInteger(j.currentStageIndex) || j.currentStageIndex < 0 || j.currentStageIndex >= STAGES.length) return `${j.id}: invalid currentStageIndex`;
+    if (!Array.isArray(j.checklist) || !Array.isArray(j.history) || !j.stageSignoffs || typeof j.stageSignoffs !== 'object') return `${j.id}: missing checklist / history / stageSignoffs`;
+    if (!j.promisedDate || !toDate(j.promisedDate)) return `${j.id}: missing or invalid promisedDate`;
+    if (!j.model || !j.client) return `${j.id}: missing model or client`;
+  }
+  if (d.users !== undefined && (!Array.isArray(d.users) || d.users.some(u => !u || typeof u.id !== 'string' || typeof u.name !== 'string'))) return '"users" must be an array of { id, name, … }.';
+  return null;
+}
+function normalizeData(d){
+  const seedById = Object.fromEntries(SEED_USERS.map(u => [u.id, u]));
+  const raw = Array.isArray(d.users) && d.users.length ? d.users : deepClone(SEED_USERS);
+  const users = raw.map(u => {                       // merge seed defaults so older backups gain email/password
+    const m = Object.assign({}, seedById[u.id] || {}, u);
+    m.initials = m.initials || initialsOf(m.name); m.role = m.role || 'Staff';
+    m.email = m.email || `${m.id}@blindhasa.com`; m.password = m.password || 'demo1234';
+    return m;
+  });
+  const maxSeq = d.jobs.reduce((m, j) => Math.max(m, parseInt(j.id.split('-')[1], 10) || 0), 2000) + 1;
+  d.jobs.forEach(j => { j.notes = j.notes || []; j.delivered = !!j.delivered; j.actualHandoverDate = j.actualHandoverDate || null; j.createdAt = j.createdAt || j.history[0]?.at || isoDT(now()); });
+  return {
+    version:2, users, jobs:d.jobs,
+    currentUserId: users.some(u => u.id === d.currentUserId) ? d.currentUserId : null,
+    readAlerts: Array.isArray(d.readAlerts) ? d.readAlerts : [],
+    seq: Math.max(d.seq || 0, maxSeq), prefs: d.prefs || {}
+  };
+}
+function loadState(){
+  try {
+    const raw = localStorage.getItem(CONFIG.storageKey);
+    if (!raw) return null;
+    const d = JSON.parse(raw);
+    if (validateData(d)) return null;
+    return normalizeData(d);
+  } catch (e) { storageOk = false; return null; }
+}
+function saveState(){
+  try { localStorage.setItem(CONFIG.storageKey, JSON.stringify(state)); storageOk = true; }
+  catch (e) { storageOk = false; }
+}
+const userById = id => state.users.find(u => u.id === id);
+const currentUser = () => userById(state.currentUserId) || state.users[0];
+const jobById = id => state.jobs.find(j => j.id === id);
+const userName = id => { const u = id && userById(id); return u ? u.name : 'System'; };
+
+/* ============================================================
+   RULES  (status math, permissions, mutations → audit trail)
+   ============================================================ */
+function jobStatus(j){                       // 'delivered' | 'late' | 'due' | 'ontrack'
+  if (j.delivered) return 'delivered';
+  const diff = dayDiff(todayISO(), j.promisedDate);
+  if (diff < 0) return 'late';
+  if (diff <= CONFIG.dueWindowDays) return 'due';
+  return 'ontrack';
+}
+function dueText(j){
+  if (j.delivered) return `delivered ${fmtD(j.actualHandoverDate)}`;
+  const diff = dayDiff(todayISO(), j.promisedDate);
+  return diff < 0 ? `${-diff}d late` : diff === 0 ? 'due today' : `in ${diff}d`;
+}
+const stageChecklist = (j, stageId) => j.checklist.filter(c => c.stage === stageId);
+function checklistProgress(j, stageId){ const items = stageChecklist(j, stageId); const done = items.filter(c => c.done).length; return { done, total:items.length, complete:done === items.length }; }
+function stageEnteredAt(j){ const i = j.currentStageIndex; if (i === 0) return j.createdAt; const prev = j.stageSignoffs[STAGES[i - 1].id]; return prev ? prev.at : j.createdAt; }
+function lastSigner(j){ let best = null; Object.values(j.stageSignoffs).forEach(so => { if (!best || so.at > best.at) best = so; }); return best; }
+
+/* Rule 1 · Quality check must be signed by an inspector, under the inspector's own login */
+function qcSignoffValid(j){
+  const so = j.stageSignoffs.qc;
+  if (!so) return { ok:false, reason:'Quality check has no sign-off yet.' };
+  const u = so.userId && userById(so.userId);
+  if (!u || !u.isInspector) return { ok:false, reason:`Quality check was signed by ${so.name}, who is not a QC inspector.` };
+  if (so.signedInAs !== so.userId) return { ok:false, reason:`Quality check sign-off was not recorded under ${so.name}'s own login.` };
+  return { ok:true };
+}
+/* Gate for the primary action. open=false → button disabled with reason. block → sheet opens but submit is blocked. */
+function signoffGate(j, user){
+  if (j.delivered) return { open:false, reason:'Job already delivered — the record is read-only.' };
+  const st = STAGES[j.currentStageIndex];
+  const p = checklistProgress(j, st.id);
+  const g = { open:true, progress:p };
+  if (st.handover){
+    if (!user.canDeliver) return { open:false, reason:'Only the General Manager can sign off handover (Rule 2).' };
+    const q = qcSignoffValid(j);
+    if (!q.ok) return { open:false, reason:`Blocked (Rule 1): ${q.reason} The QC inspector must sign Quality check under their own login before delivery.` };
+  } else {
+    if (!user.canSignStages) return { open:false, reason:`${user.role} accounts can't record stage sign-offs.` };
+    if (st.inspector && !user.isInspector){ g.block = `Quality check must be verified by the QC inspector under their own login. You're signed in as ${user.name} (${user.role}).`; g.switchTo = 'rs'; }
+  }
+  if (!p.complete){
+    if (user.isManager && !st.inspector) g.needsOverride = true;
+    else if (!g.block) g.block = `Checklist incomplete (${p.done}/${p.total}). Complete every item${st.inspector ? '' : ' or ask a manager to sign off with an override reason'}.`;
+  }
+  return g;
+}
+function log(j, type, text, userId){
+  j.history.push({ id:uid(), at:isoDT(now()), userId:userId || state.currentUserId, type, text });   // append-only
+}
+function signOffStage(jobId, { verifier, note = '', overrideReason = '', handoverDate } = {}){
+  const j = jobById(jobId); if (!j) return { ok:false, error:'Job not found.' };
+  const user = currentUser();
+  const gate = signoffGate(j, user);
+  if (!gate.open) return { ok:false, error:gate.reason };
+  if (gate.block) return { ok:false, error:gate.block };
+  const st = STAGES[j.currentStageIndex];
+  if (st.handover) verifier = { userId:user.id, name:user.name, role:user.role, initials:user.initials };
+  if (!verifier || !verifier.name || !verifier.role) return { ok:false, error:'Choose who verified it (name and role).' };
+  if (st.inspector && !(verifier.userId === user.id && user.isInspector)) return { ok:false, error:'Quality check must be verified by the logged-in QC inspector.' };
+  if (gate.needsOverride){
+    if (!overrideReason || overrideReason.trim().length < 4) return { ok:false, error:'Checklist incomplete — a manager override reason is required.' };
+    log(j, 'override', `Manager override on ${st.name} checklist (${gate.progress.done}/${gate.progress.total} done) by ${user.name} — reason: ${overrideReason.trim()}`);
+  }
+  const at = isoDT(now());
+  j.stageSignoffs[st.id] = { userId:verifier.userId || null, name:verifier.name, initials:verifier.initials || initialsOf(verifier.name), role:verifier.role, at, note:note.trim(), signedInAs:user.id };
+  let message;
+  if (st.handover){
+    j.delivered = true;
+    j.actualHandoverDate = handoverDate || todayISO();
+    j.nextAction = 'Delivered';
+    log(j, 'delivered', `Handover signed off by ${user.name} (${user.role}) · actual handover ${fmtD(j.actualHandoverDate)}` + (note ? ` — “${note.trim()}”` : ''));
+    message = `${j.id} delivered · handover signed by ${user.initials}`;
+  } else {
+    const next = STAGES[j.currentStageIndex + 1];
+    log(j, 'stage_signoff', `${st.name} signed off by ${verifier.name} (${verifier.role}) → ${next.name}` + (note ? ` — “${note.trim()}”` : ''));
+    j.currentStageIndex += 1;
+    j.nextAction = NEXT_ACTIONS[next.id];
+    message = `${st.name} signed off · ${j.id} → ${next.name}`;
+  }
+  saveState();
+  afterSignoff(j);
+  return { ok:true, message };
+}
+function toggleCheck(jobId, itemId, reason){
+  const j = jobById(jobId), c = j && j.checklist.find(x => x.id === itemId);
+  if (!c) return { ok:false, error:'Item not found.' };
+  const user = currentUser();
+  const stIdx = STAGES.findIndex(s => s.id === c.stage);
+  if (j.delivered) return { ok:false, error:'Delivered jobs are read-only.' };
+  if (stIdx < j.currentStageIndex) return { ok:false, error:'This stage is already signed off — its checklist is locked.' };
+  if (stIdx > j.currentStageIndex) return { ok:false, error:`${STAGES[stIdx].name} hasn't started yet.` };
+  if (!c.done){
+    c.done = true; c.doneBy = user.name; c.doneAt = isoDT(now());
+    log(j, 'checklist', `Checked “${c.text}” (${STAGES[stIdx].name})`);
+  } else {
+    if (!reason) return { ok:false, needReason:true, error:'A reason is required to uncheck an item.' };
+    c.done = false; c.doneBy = null; c.doneAt = null;
+    log(j, 'checklist', `Unchecked “${c.text}” (${STAGES[stIdx].name}) — reason: ${reason}`);
+  }
+  saveState();
+  return { ok:true };
+}
+function changeDate(jobId, field, value, reason){
+  const j = jobById(jobId), user = currentUser();
+  const allowed = field === 'actualHandoverDate' ? user.canDeliver : user.canEditDates;
+  if (!allowed) return { ok:false, error:`Your role (${user.role}) can't change the ${FIELD_LABEL[field].toLowerCase()}.` };
+  if (!value || !toDate(value)) return { ok:false, error:'Pick a valid date.' };
+  if (!reason || reason.trim().length < 4) return { ok:false, error:'A reason is required (it goes to the audit trail).' };
+  const from = j[field];
+  if (from === value) return { ok:false, error:'The date is unchanged.' };
+  j[field] = value;
+  log(j, 'date_change', `${FIELD_LABEL[field]} changed ${from ? fmtD(from) : '—'} → ${fmtD(value)} — reason: ${reason.trim()}`);
+  saveState();
+  return { ok:true, message:`${FIELD_LABEL[field]} updated · logged` };
+}
+function addNote(jobId, text){
+  const j = jobById(jobId); text = (text || '').trim();
+  if (!text) return { ok:false, error:'Write something first.' };
+  j.notes.push({ id:uid(), at:isoDT(now()), userId:state.currentUserId, text });
+  log(j, 'note', `Note added: “${text}”`);
+  saveState();
+  return { ok:true };
+}
+function createJob(d){
+  const id = `BLH-${state.seq++}`;
+  const level = ARMOR_SPECS[d.armorLevel] ? d.armorLevel : 'B6';
+  const j = {
+    id, armorLevel:level, year:d.year, make:d.make.trim(), model:d.model.trim(), client:d.client.trim(), armorSpec:d.armorSpec || ARMOR_SPECS[level],
+    currentStageIndex:0, assignedTeam:d.assignedTeam || 'Intake', nextAction:(d.nextAction || NEXT_ACTIONS.intake).trim(),
+    promisedDate:d.promisedDate, forecastReadyDate:d.forecastReadyDate || d.promisedDate, actualHandoverDate:null, delivered:false,
+    createdAt:isoDT(now()), checklist:buildChecklist(), stageSignoffs:{}, history:[], notes:[]
+  };
+  log(j, 'created', `Job created at Intake · ${j.year} ${j.make} ${j.model} for ${j.client} · ${j.armorLevel} · promised ${fmtD(j.promisedDate)}`);
+  state.jobs.unshift(j);
+  saveState();
+  return j;
+}
+/* Alerts are derived live from the jobs; only the read/unread flags are stored */
+function buildAlerts(){
+  const out = [];
+  state.jobs.forEach(j => {
+    if (j.delivered) return;
+    const s = jobStatus(j), st = STAGES[j.currentStageIndex], vehicle = `${j.year} ${j.make} ${j.model}`;
+    const diff = dayDiff(todayISO(), j.promisedDate);
+    if (s === 'late') out.push({ id:`late:${j.id}`, type:'late', jobId:j.id, title:`${plural(-diff, 'day')} past promised date`, text:`${vehicle} · ${j.client} · promised ${fmtD(j.promisedDate)}, still in ${st.name} (step ${j.currentStageIndex + 1} of 7).` });
+    else if (s === 'due') out.push({ id:`due:${j.id}`, type:'due', jobId:j.id, title:diff === 0 ? 'Due today' : `Due in ${plural(diff, 'day')} · ${fmtDL(j.promisedDate)}`, text:`${vehicle} · ${j.client} · currently in ${st.name}.` });
+    const fc = j.forecastReadyDate ? dayDiff(j.promisedDate, j.forecastReadyDate) : 0;
+    if (fc > 0) out.push({ id:`forecast:${j.id}`, type:'forecast', jobId:j.id, title:`Forecast ${plural(fc, 'day')} later than promised`, text:`${vehicle} · forecast ready ${fmtD(j.forecastReadyDate)} vs promised ${fmtD(j.promisedDate)}. Re-plan or re-promise the client.` });
+    const p = checklistProgress(j, st.id);
+    if (st.handover) out.push({ id:`signoff:${j.id}`, type:'signoff', jobId:j.id, title:'Awaiting handover sign-off (General Manager)', text:`${vehicle} · ${j.client} · delivery checklist ${p.done}/${p.total}.` });
+    else if (p.complete) out.push({ id:`signoff:${j.id}`, type:'signoff', jobId:j.id, title:`Awaiting ${st.name} sign-off`, text:`${vehicle} · checklist complete (${p.done}/${p.total}). Needs a named ${st.inspector ? 'QC inspector' : 'verifier'} to move on.` });
+  });
+  const rank = { late:0, signoff:1, forecast:2, due:3 };
+  out.sort((a, b) => rank[a.type] - rank[b.type] || a.jobId.localeCompare(b.jobId));
+  return out.map(a => ({ ...a, read:state.readAlerts.includes(a.id) }));
+}
+const unreadCount = () => buildAlerts().filter(a => !a.read).length;
+function markRead(id){ if (id && !state.readAlerts.includes(id)){ state.readAlerts.push(id); saveState(); } }
+function markAllRead(){ buildAlerts().forEach(a => { if (!state.readAlerts.includes(a.id)) state.readAlerts.push(a.id); }); saveState(); render(); toast('All alerts marked read'); }
+
+/* ============================================================
+   RENDER · shell, navigation
+   ============================================================ */
+function render(){
+  const r = ui.route;
+  if (!state.currentUserId || r.view === 'login'){ renderLogin(); return; }
+  $id('login-root').innerHTML = '';
+  $id('app').classList.remove('hidden');
+  const isJob = r.view === 'job';
+  if (!isJob) ui.lastTab = r.view;
+  if (isJob && ui.detailId !== r.id){ ui.detailId = r.id; ui.checklistStage = null; ui.clExpanded = false; }
+  document.body.classList.toggle('detail-open', isJob);
+  const key = isJob ? 'job:' + r.id : r.view;
+  const routeChanged = key !== ui.lastKey; ui.lastKey = key;
+  renderHeader(); renderNav();
+  const tab = isJob ? ui.lastTab : r.view;
+  $id('main').innerHTML = tab === 'jobs' ? viewJobs() : tab === 'alerts' ? viewAlerts() : viewBoard();
+  const job = isJob ? jobById(r.id) : null;
+  $id('detail').innerHTML = isJob ? (job ? viewJob(job) : viewNotFound(r.id)) : '';
+  document.title = 'BLINDHASA · ' + (job ? job.id : tab === 'board' ? 'Job board' : tab[0].toUpperCase() + tab.slice(1));
+  if (routeChanged){ window.scrollTo(0, 0); $id('detail').scrollTop = 0; }
+  renderGuide();
+}
+function renderHeader(){
+  const u = currentUser(), b = $id('avatar-btn');
+  b.textContent = u.initials;
+  b.setAttribute('aria-label', `Signed in as ${u.name}. Open account and settings`);
+  $id('topbar-user').innerHTML = `<span class="eyebrow">Signed in as</span><b>${esc(u.name)}</b><span class="muted">· ${esc(u.role)}</span>`;
+}
+function renderNav(){
+  const unread = unreadCount();
+  const cur = ui.route.view === 'job' ? ui.lastTab : ui.route.view;
+  const items = [['board', 'Board', ICON.board], ['jobs', 'Jobs', ICON.jobs], ['alerts', 'Alerts', ICON.bell]];
+  const badge = id => id === 'alerts' && unread ? `<span class="badge" aria-label="${unread} unread alerts">${unread}</span>` : '';
+  const link = (cls) => ([id, l, ic]) => `<a class="${cls} ${cur === id ? 'active' : ''}" href="#/${id}" ${cur === id ? 'aria-current="page"' : ''}>${ic}<span>${l}</span>${badge(id)}</a>`;
+  $id('tabbar').innerHTML = items.map(link('tab')).join('');
+  $id('sidenav').innerHTML = items.map(link('side-item')).join('');
+  const u = currentUser();
+  $id('sidefoot').innerHTML = `<button class="side-user" data-action="menu" aria-label="Account and settings"><span class="avatar">${u.initials}</span><span class="su-txt"><span class="n">${esc(u.name)}</span><span class="r">${esc(u.role)}</span></span></button><div class="side-meta">${ICON.clock} Today ${fmtDL(CONFIG.today)} · demo clock</div>`;
+}
+function emptyState(title, text, action = ''){
+  return `<div class="empty-state"><div class="es-ic">${ICON.shieldCheck}</div><h3>${title}</h3><p>${text}</p>${action}</div>`;
+}
+function viewNotFound(id){
+  return `<div class="detail-inner"><a class="back" href="#/${ui.lastTab}">${ICON.arrowLeft}<span>Back</span></a>${emptyState('Job not found', `There is no job <span class="mono">${esc(id)}</span> in this workshop.`, '<a class="btn btn-sm" href="#/board">Go to Job board</a>')}</div>`;
+}
+
+/* ---------- shared card pieces ---------- */
+const armorBadge = level => `<span class="badge-armor" aria-label="Armor level ${esc(level)}">${ICON.shield}${esc(level)}</span>`;
+function statusPill(j){
+  const s = jobStatus(j);
+  return s === 'late' ? '<span class="pill-late">LATE</span>' : s === 'delivered' ? '<span class="pill pill-dark">DELIVERED</span>' : s === 'due' ? '<span class="pill">DUE SOON</span>' : '<span class="pill">ON TRACK</span>';
+}
+function segments(j){
+  const late = jobStatus(j) === 'late';
+  return `<div class="segs" role="img" aria-label="Stage ${j.currentStageIndex + 1} of ${STAGES.length}">${STAGES.map((s, i) => `<span class="seg ${i < j.currentStageIndex || j.delivered ? 'done' : i === j.currentStageIndex ? 'cur' + (late ? ' late' : '') : ''}"></span>`).join('')}</div>`;
+}
+function jobCard(j){
+  const s = jobStatus(j), late = s === 'late', st = STAGES[j.currentStageIndex], last = lastSigner(j);
+  const sel = ui.route.view === 'job' && ui.route.id === j.id;
+  return `<article class="card job-card ${late ? 'late' : ''} ${sel ? 'sel' : ''}" role="link" tabindex="0" data-action="open-job" data-id="${j.id}" aria-label="${j.id}, ${j.year} ${esc(j.make)} ${esc(j.model)}, ${esc(j.client)}, ${j.delivered ? 'delivered' : st.name}${late ? ', late' : ''}">
+    <div class="jc-top"><span class="mono">${j.id}</span>${armorBadge(j.armorLevel)}${late ? '<span class="pill-late">LATE</span>' : ''}${j.delivered ? '<span class="pill pill-dark">DELIVERED</span>' : ''}${last ? `<span class="pill-signer" title="Last signed off by ${esc(last.name)}">${ICON.badge}${esc(last.initials)}</span>` : ''}</div>
+    <div class="jc-body">
+      <div class="jc-left"><div class="jc-year">${j.year} ${esc(j.make)}</div><div class="jc-model">${esc(j.model)}</div><div class="jc-client">${esc(j.client)}</div></div>
+      <div class="jc-right"><div class="jc-date">${ICON.calendar}${fmtD(j.promisedDate)}</div><div class="jc-due ${late ? 'late' : ''}">${dueText(j)}</div></div>
+    </div>
+    <div class="jc-bottom">${segments(j)}<span class="jc-stage">${j.delivered ? 'Delivered' : st.name}</span>${ICON.chevron}</div>
+  </article>`;
+}
+
+/* ============================================================
+   RENDER · Job board
+   ============================================================ */
+function viewBoard(){
+  const active = state.jobs.filter(j => !j.delivered);
+  const late = active.filter(j => jobStatus(j) === 'late');
+  const due = active.filter(j => jobStatus(j) === 'due');
+  const ontrack = active.filter(j => jobStatus(j) !== 'late');
+  const stagesInUse = new Set(active.map(j => j.currentStageIndex)).size;
+  const pct = active.length ? Math.round(ontrack.length / active.length * 100) : 0;
+  const base = ui.boardFilter === 'late' ? late : ui.boardFilter === 'due' ? due : ui.boardFilter === 'ontrack' ? ontrack : active;
+  const chips = [{ id:'all', name:'All', n:base.length }].concat(STAGES.map(s => ({ id:s.id, name:s.name, n:base.filter(j => STAGES[j.currentStageIndex].id === s.id).length })));
+  const list = ui.stageFilter === 'all' ? base : base.filter(j => STAGES[j.currentStageIndex].id === ui.stageFilter);
+  const byDate = (a, b) => a.promisedDate < b.promisedDate ? -1 : a.promisedDate > b.promisedDate ? 1 : 0;
+  const groups = [
+    { key:'late', label:'Behind schedule', items:list.filter(j => jobStatus(j) === 'late').sort(byDate) },
+    { key:'due', label:'Due this week', items:list.filter(j => jobStatus(j) === 'due').sort(byDate) },
+    { key:'ontrack', label:'On schedule', items:list.filter(j => jobStatus(j) === 'ontrack').sort(byDate) }
+  ].filter(g => g.items.length);
+  const tile = (f, label, num, sub, cls = '') => `<button class="stat ${cls} ${ui.boardFilter === f ? 'active' : ''}" data-action="tile" data-filter="${f}" aria-pressed="${ui.boardFilter === f}"><div class="label">${label}</div><div class="num">${num}</div><div class="sub">${sub}</div></button>`;
+  const filtersOn = ui.boardFilter !== 'all' || ui.stageFilter !== 'all';
+  return `
+  <div class="eyebrow">${esc(CONFIG.plant)}</div>
+  <div class="h-row"><h1>Job board</h1><button class="fab" data-action="new-job" aria-label="New job (intake)">${ICON.plus}</button></div>
+  <div class="updated">${ICON.clock} Updated ${fmtDL(CONFIG.today)}, ${fmtT(CONFIG.today)}</div>
+  <div class="stats">
+    ${tile('all', 'In production', active.length, `across ${plural(stagesInUse, 'stage')}`)}
+    ${tile('ontrack', 'On schedule', ontrack.length, `${pct}% of active jobs`)}
+    ${tile('due', 'Due in 7 days', due.length, `through ${fmtD(addDays(CONFIG.today, CONFIG.dueWindowDays))}`)}
+    ${tile('late', 'Behind schedule', late.length, 'past due, not delivered', 'danger')}
+  </div>
+  <div class="chips-row">
+    <div class="chips" role="group" aria-label="Filter by stage">${chips.map(c => `<button class="chip ${ui.stageFilter === c.id ? 'active' : ''}" aria-pressed="${ui.stageFilter === c.id}" data-action="chip" data-stage="${c.id}">${c.name}<span class="count">${c.n}</span></button>`).join('')}</div>
+    <div class="seg-toggle desk-only" role="group" aria-label="Board view"><button class="${ui.boardView === 'cards' ? 'on' : ''}" data-action="board-view" data-view="cards" aria-pressed="${ui.boardView === 'cards'}">${ICON.grid} Cards</button><button class="${ui.boardView === 'kanban' ? 'on' : ''}" data-action="board-view" data-view="kanban" aria-pressed="${ui.boardView === 'kanban'}">${ICON.kanban} Kanban</button></div>
+  </div>
+  ${ui.boardView === 'kanban' && isDesktop() ? kanban(list)
+    : groups.length ? groups.map(g => `<section aria-label="${g.label}"><h2 class="group-h ${g.key}">${g.key === 'late' ? ICON.alert : ''}${g.label} · ${g.items.length}</h2><div class="cards-grid">${g.items.map(jobCard).join('')}</div></section>`).join('')
+    : emptyState(active.length ? 'No vehicles match' : 'No vehicles in production', active.length ? 'Try another stage or clear the filter.' : 'Tap + to receive the first vehicle at Intake.', filtersOn ? '<button class="btn btn-sm" data-action="clear-filters">Clear filters</button>' : '')}`;
+}
+function kanban(list){
+  return `<div class="kanban">${STAGES.map((s, i) => {
+    const col = list.filter(j => j.currentStageIndex === i);
+    return `<div class="kcol"><div class="kcol-h"><span>${s.name}</span><span class="count">${col.length}</span></div>${col.length ? col.map(j => { const late = jobStatus(j) === 'late'; return `<button class="kcard ${late ? 'late' : ''}" data-action="open-job" data-id="${j.id}"><div class="jc-top"><span class="mono">${j.id}</span>${late ? '<span class="pill-late">LATE</span>' : ''}</div><div class="k-model">${j.year} ${esc(j.make)} ${esc(j.model)}</div><div class="k-client">${esc(j.client)}</div><div class="k-date">${ICON.calendar}${fmtD(j.promisedDate)} · <span class="${late ? 'red' : 'muted'}">${dueText(j)}</span></div></button>`; }).join('') : '<div class="k-empty">—</div>'}</div>`;
+  }).join('')}</div>`;
+}
+
+/* ============================================================
+   RENDER · Jobs tab (table)
+   ============================================================ */
+function viewJobs(){
+  const f = ui.jobs;
+  const clients = [...new Set(state.jobs.map(j => j.client))].sort();
+  const armors = [...new Set(state.jobs.map(j => j.armorLevel))].sort();
+  const active = state.jobs.filter(j => !j.delivered).length;
+  const opt = (v, l, cur) => `<option value="${esc(v)}" ${v === cur ? 'selected' : ''}>${esc(l)}</option>`;
+  return `<div class="eyebrow">${esc(CONFIG.plant)}</div>
+  <div class="h-row"><h1>Jobs</h1><button class="fab" data-action="new-job" aria-label="New job (intake)">${ICON.plus}</button></div>
+  <div class="updated">${ICON.jobs} ${state.jobs.length} jobs · ${active} active · ${state.jobs.length - active} delivered</div>
+  <div class="filters">
+    <input id="jobs-q" class="input" type="search" placeholder="Search ID, model, client…" value="${esc(f.q)}" aria-label="Search jobs" autocomplete="off">
+    <select class="input" data-filter="stage" aria-label="Filter by stage">${opt('all', 'All stages', f.stage)}${STAGES.map(s => opt(s.id, s.name, f.stage)).join('')}</select>
+    <select class="input" data-filter="status" aria-label="Filter by status">${opt('all', 'All statuses', f.status)}${opt('late', 'Late', f.status)}${opt('due', 'Due in 7 days', f.status)}${opt('ontrack', 'On schedule', f.status)}${opt('delivered', 'Delivered', f.status)}</select>
+    <select class="input" data-filter="armor" aria-label="Filter by armor level">${opt('all', 'All levels', f.armor)}${armors.map(a => opt(a, a, f.armor)).join('')}</select>
+    <select class="input" data-filter="client" aria-label="Filter by client">${opt('all', 'All clients', f.client)}${clients.map(c => opt(c, c, f.client)).join('')}</select>
+    <select class="input" data-filter="sort" aria-label="Sort by">${opt('promised', 'Sort · promised date', f.sort)}${opt('forecast', 'Sort · forecast date', f.sort)}${opt('id', 'Sort · ID (newest)', f.sort)}</select>
+  </div>
+  <div id="jobs-results">${jobsTable()}</div>`;
+}
+function filteredJobs(){
+  const f = ui.jobs, q = f.q.trim().toLowerCase();
+  const list = state.jobs.filter(j => {
+    if (q && !`${j.id} ${j.year} ${j.make} ${j.model} ${j.client}`.toLowerCase().includes(q)) return false;
+    if (f.stage !== 'all' && STAGES[j.currentStageIndex].id !== f.stage) return false;
+    if (f.armor !== 'all' && j.armorLevel !== f.armor) return false;
+    if (f.status !== 'all' && jobStatus(j) !== f.status) return false;
+    if (f.client !== 'all' && j.client !== f.client) return false;
+    return true;
+  });
+  const key = f.sort === 'id' ? (j => j.id) : f.sort === 'forecast' ? (j => j.forecastReadyDate || '9999') : (j => j.promisedDate);
+  list.sort((a, b) => key(a) < key(b) ? -1 : key(a) > key(b) ? 1 : 0);
+  if (f.sort === 'id') list.reverse();
+  return list;
+}
+function jobsTable(){
+  const list = filteredJobs();
+  if (!list.length) return emptyState('No jobs match', 'Adjust the filters or the search.', '<button class="btn btn-sm" data-action="clear-job-filters">Clear filters</button>');
+  return `<div class="table-wrap"><table><thead><tr><th scope="col">ID</th><th scope="col">Vehicle</th><th scope="col" class="hide-m">Client</th><th scope="col">Level</th><th scope="col">Stage</th><th scope="col">Promised</th><th scope="col" class="hide-m">Forecast</th><th scope="col">Status</th><th scope="col" class="hide-m">Last sign-off</th></tr></thead><tbody>${list.map(j => {
+    const ls = lastSigner(j), late = jobStatus(j) === 'late';
+    return `<tr class="rowbtn" tabindex="0" data-action="open-job" data-id="${j.id}" aria-label="Open ${j.id}"><td><span class="mono">${j.id}</span></td><td><b>${j.year} ${esc(j.make)} ${esc(j.model)}</b></td><td class="hide-m">${esc(j.client)}</td><td>${armorBadge(j.armorLevel)}</td><td>${j.delivered ? 'Delivered' : STAGES[j.currentStageIndex].name}<span class="muted"> · ${j.currentStageIndex + 1}/7</span></td><td><b class="${late ? 'red' : ''}">${fmtD(j.promisedDate)}</b> <span class="${late ? 'red' : 'muted'}">${dueText(j)}</span></td><td class="hide-m">${fmtD(j.forecastReadyDate)}</td><td>${statusPill(j)}</td><td class="hide-m">${ls ? `${esc(ls.initials)} · ${fmtD(ls.at)}` : '—'}</td></tr>`;
+  }).join('')}</tbody></table></div><p class="muted" style="font-size:12px;margin-top:8px">${list.length} of ${state.jobs.length} jobs</p>`;
+}
+function renderJobsResults(){ const el = $id('jobs-results'); if (el) el.innerHTML = jobsTable(); }
+
+/* ============================================================
+   RENDER · Alerts tab
+   ============================================================ */
+function viewAlerts(){
+  const alerts = buildAlerts(), unread = alerts.filter(a => !a.read).length;
+  return `<div class="eyebrow">${esc(CONFIG.plant)}</div>
+  <div class="h-row"><h1>Alerts</h1>${unread ? `<button class="btn btn-sm" data-action="mark-all-read">${ICON.check} Mark all read</button>` : ''}</div>
+  <div class="updated">${ICON.bell} ${unread} unread · ${alerts.length} total · generated ${fmtDL(CONFIG.today)}, ${fmtT(CONFIG.today)}</div>
+  ${alerts.length ? `<div class="alerts">${alerts.map(alertRow).join('')}</div>` : emptyState('All clear', 'No late jobs, nothing due this week and nothing waiting on a signature.')}`;
+}
+function alertRow(a){
+  return `<button class="card alert ${a.type} ${a.read ? 'read' : 'unread'}" data-action="open-alert" data-alert="${a.id}" data-id="${a.jobId}" aria-label="${a.read ? '' : 'Unread. '}${esc(a.title)} · ${a.jobId}">
+    <span class="a-ic">${ALERT_ICON[a.type]}</span>
+    <span class="a-body"><span class="a-top"><span class="mono">${a.jobId}</span>${a.read ? '' : '<span class="dot-unread"></span>'}</span><span class="a-title" style="display:block">${esc(a.title)}</span><span class="a-text" style="display:block">${esc(a.text)}</span></span>
+    ${ICON.chevron}</button>`;
+}
+
+/* ============================================================
+   RENDER · Job detail
+   ============================================================ */
+function viewJob(j){
+  const user = currentUser(), st = STAGES[j.currentStageIndex], status = jobStatus(j), late = status === 'late';
+  const diff = dayDiff(todayISO(), j.promisedDate);
+  const p = checklistProgress(j, st.id);
+  const deliveredLate = j.delivered ? dayDiff(j.promisedDate, j.actualHandoverDate) : 0;
+  const promisedSub = j.delivered ? (deliveredLate > 0 ? `delivered ${plural(deliveredLate, 'day')} late` : 'delivered on time')
+    : diff < 0 ? `${plural(-diff, 'day')} late` : diff === 0 ? 'due today' : `${plural(diff, 'day')} left`;
+  const stageSub = j.delivered ? `Handed over ${fmtD(j.actualHandoverDate)}` : `Step ${j.currentStageIndex + 1} of ${STAGES.length} · ${st.handover || p.complete ? 'awaiting sign-off' : `${p.done}/${p.total} checklist`}`;
+  const gate = j.delivered ? null : signoffGate(j, user);
+  const qc = j.stageSignoffs.qc;
+  const fcLate = j.forecastReadyDate && !j.delivered ? dayDiff(j.promisedDate, j.forecastReadyDate) : 0;
+  const clStage = ui.checklistStage && STAGES.some(s => s.id === ui.checklistStage) ? ui.checklistStage : st.id;
+  const backLabel = { board:'Job board', jobs:'Jobs', alerts:'Alerts' }[ui.lastTab] || 'Job board';
+  return `<div class="detail-inner">
+    <a class="back" href="#/${ui.lastTab}">${ICON.arrowLeft}<span>${backLabel}</span></a>
+    <article class="card dcard" aria-labelledby="job-title">
+      <div class="jc-top"><span class="mono">${j.id}</span>${armorBadge(j.armorLevel)}${statusPill(j)}<span class="spacer"></span><button class="icon-btn no-print" data-action="print" aria-label="Print job record">${ICON.print}</button></div>
+      <div class="jc-year" style="margin-top:14px">${j.year} ${esc(j.make)}</div>
+      <h1 class="d-model" id="job-title">${esc(j.model)}</h1>
+      <div class="d-client">${esc(j.client)}</div>
+      <div class="d-spec">${ICON.shield}<span>${esc(j.armorLevel)} · ${esc(j.armorSpec)}</span></div>
+      <div class="subcards">
+        <div class="subcard"><div class="k">Current stage</div><div class="v">${j.delivered ? 'Delivered' : st.name}</div><div class="s">${stageSub}</div></div>
+        <div class="subcard ${late ? 'late' : ''}"><div class="k">Promised delivery</div><div class="v">${fmtDL(j.promisedDate)}</div><div class="s">${promisedSub}</div></div>
+      </div>
+      <div class="dates">
+        ${dateRow(j, 'Forecast ready', j.forecastReadyDate, 'forecastReadyDate', !!user.canEditDates && !j.delivered, fcLate > 0 ? `${fcLate}d after promised` : '')}
+        ${dateRow(j, 'Actual handover', j.actualHandoverDate, 'actualHandoverDate', !!user.canDeliver && j.delivered, '', 'Not yet delivered')}
+        ${dateRow(j, 'Promised delivery', j.promisedDate, 'promisedDate', !!user.canEditDates && !j.delivered, '')}
+      </div>
+      <dl class="meta"><div><dt>Assigned team</dt><dd>${esc(j.assignedTeam)}</dd></div><div><dt>Next action</dt><dd>${esc(j.nextAction)}</dd></div></dl>
+    </article>
+    ${stepper(j)}
+    ${qc ? qcCard(qc) : ''}
+    ${checklistSection(j, clStage)}
+    ${historySection(j)}
+    ${notesSection(j)}
+    ${printBlock(j)}
+  </div>
+  <div class="actionbar no-print">${gate && !gate.open ? `<div class="ab-hint">${ICON.lock}<span>${esc(gate.reason)}</span></div>` : ''}<button class="btn" data-action="add-note" data-id="${j.id}">${ICON.note} Note</button>${primaryButton(j, gate)}</div>`;
+}
+function dateRow(j, label, value, field, editable, warn, emptyText){
+  return `<div class="date-row ${value ? '' : 'empty'}"><div><div class="k">${label}</div><div class="v">${value ? fmtDL(value) : (emptyText || '—')}</div>${warn ? `<div class="w">${ICON.trend} ${warn}</div>` : ''}</div>${editable ? `<button class="btn btn-sm btn-ghost no-print" data-action="edit-date" data-id="${j.id}" data-field="${field}" aria-label="Edit ${label}">${ICON.edit} Edit</button>` : ''}</div>`;
+}
+function primaryButton(j, gate){
+  if (j.delivered) return `<button class="btn btn-primary" style="flex:1" disabled>${ICON.checkCircle} Delivered ${fmtD(j.actualHandoverDate)}</button>`;
+  const st = STAGES[j.currentStageIndex];
+  return `<button class="btn btn-primary" style="flex:1" data-action="open-signoff" data-id="${j.id}" aria-disabled="${!gate.open}">${ICON.checkCircle} ${st.handover ? 'Sign off handover' : 'Sign off ' + st.name}</button>`;
+}
+function stepper(j){
+  const late = jobStatus(j) === 'late';
+  return `<div class="stepper" role="list" aria-label="Stages">${STAGES.map((s, i) => {
+    const so = j.stageSignoffs[s.id];
+    const done = i < j.currentStageIndex || (j.delivered && i <= j.currentStageIndex);
+    const cur = i === j.currentStageIndex && !j.delivered;
+    const sub = done ? (so ? `${esc(so.initials)} · ${fmtD(so.at)}` : 'Signed') : cur ? `Since ${fmtD(stageEnteredAt(j))}` : '—';
+    return `<div class="step ${done ? 'done' : ''} ${cur ? 'cur' : ''} ${cur && late ? 'late' : ''}" role="listitem" ${cur ? 'aria-current="step"' : ''}><div class="circ" aria-hidden="true">${done ? ICON.check : i + 1}</div><div class="nm">${s.name}</div><div class="sb">${sub}</div></div>`;
+  }).join('')}</div>`;
+}
+function qcCard(so){
+  return `<section class="darkcard" aria-label="Final quality check">
+    <div class="eyebrow">Final quality check · Passed</div>
+    <div class="qc-row"><span class="avatar">${esc(so.initials)}</span><div><div class="k2">Signed off by</div><div class="qc-name">${esc(so.name)}</div><div class="qc-meta">${esc(so.role)} · ${fmtDT(so.at)}</div></div></div>
+    ${so.note ? `<p class="quote">“${esc(so.note)}”</p>` : ''}
+  </section>`;
+}
+function checklistSection(j, stageId){
+  const st = STAGES.find(s => s.id === stageId), stIdx = STAGES.indexOf(st);
+  const items = stageChecklist(j, stageId), p = checklistProgress(j, stageId);
+  const editable = !j.delivered && stIdx === j.currentStageIndex;
+  const lockMsg = j.delivered ? 'Delivered · record is read-only' : stIdx < j.currentStageIndex ? 'Stage signed off · checklist locked' : stIdx > j.currentStageIndex ? 'Stage not started yet' : '';
+  const LIMIT = 10;
+  const collapsed = items.length > LIMIT && !ui.clExpanded;
+  const shown = collapsed ? items.slice(0, 8) : items;
+  return `<section class="card sec" aria-labelledby="cl-title">
+    <div class="sec-h"><div><div class="eyebrow">Checklist</div><h2 id="cl-title">${st.name} <span class="prog">${p.done}/${p.total}</span></h2></div>
+      <label class="sr-only" for="cl-stage">Show checklist for stage</label>
+      <select id="cl-stage" class="input sel-sm no-print" data-action="checklist-stage">${STAGES.map(s => `<option value="${s.id}" ${s.id === stageId ? 'selected' : ''}>${s.name}</option>`).join('')}</select></div>
+    <div class="progress" role="progressbar" aria-valuemin="0" aria-valuemax="${p.total}" aria-valuenow="${p.done}"><span style="width:${p.total ? p.done / p.total * 100 : 0}%"></span></div>
+    ${lockMsg ? `<div class="lock">${ICON.lock} ${lockMsg}</div>` : ''}
+    <div class="check-list">${shown.map(c => `<div class="check-row ${c.done ? 'done' : ''}"><button class="cbx ${c.done ? 'on' : ''}" role="checkbox" aria-checked="${c.done}" aria-label="${esc(c.text)}" data-action="toggle-check" data-id="${j.id}" data-item="${c.id}" ${editable ? '' : 'disabled'}>${c.done ? ICON.check : ''}</button><div><div class="t">${esc(c.text)}</div>${c.done ? `<div class="m">Completed by ${esc(c.doneBy)} · ${fmtDT(c.doneAt)}</div>` : ''}</div></div>`).join('')}</div>
+    ${collapsed ? `<button class="more" data-action="show-all-checks">Show ${items.length - shown.length} more items ${ICON.chevronDown}</button>` : ''}
+  </section>`;
+}
+function historySection(j){
+  const items = [...j.history].sort((a, b) => a.at < b.at ? 1 : a.at > b.at ? -1 : 0);
+  return `<details class="card sec" ${ui.historyOpen ? 'open' : ''} data-details="history">
+    <summary><div><div class="eyebrow">Audit trail</div><h2>Stage history & sign-offs <span class="prog">${items.length}</span></h2></div>${ICON.chevronDown}</summary>
+    <ol class="tl">${items.map(h => `<li><span class="dot ${h.type}" aria-hidden="true"></span><div><div class="tl-t">${esc(h.text)}</div><div class="tl-m">${fmtDT(h.at)} · ${esc(userName(h.userId))} · <span class="tl-type">${h.type.replace('_', ' ')}</span></div></div></li>`).join('')}</ol>
+    <p class="tl-foot">${ICON.lock} Entries are immutable — they can't be edited or deleted.</p>
+  </details>`;
+}
+function notesSection(j){
+  return `<section class="card sec" aria-labelledby="notes-title">
+    <div class="sec-h"><div><div class="eyebrow">Notes</div><h2 id="notes-title">Notes <span class="prog">${j.notes.length}</span></h2></div><button class="btn btn-sm no-print" data-action="add-note" data-id="${j.id}">${ICON.plus} Add note</button></div>
+    ${j.notes.length ? `<ul class="notes">${[...j.notes].reverse().map(n => `<li><div class="n-t">${esc(n.text)}</div><div class="n-m">${esc(userName(n.userId))} · ${fmtDT(n.at)}</div></li>`).join('')}</ul>` : '<p class="empty">No notes yet.</p>'}
+  </section>`;
+}
+function printBlock(j){
+  return `<section class="print-only"><h2 style="font-size:16px;margin:16px 0 8px">Sign-off record · ${j.id}</h2>
+    <table><thead><tr><th>Stage</th><th>Signed off by</th><th>Date / time</th><th>Note</th></tr></thead><tbody>${STAGES.map(s => { const so = j.stageSignoffs[s.id]; return `<tr><td>${s.name}</td><td>${so ? `${esc(so.name)} (${esc(so.role)})` : '—'}</td><td>${so ? fmtDT(so.at) : '—'}</td><td>${so ? esc(so.note) : ''}</td></tr>`; }).join('')}</tbody></table>
+    <p style="font-size:11px;margin-top:10px">Printed ${fmtDTY(now())}, ${fmtT(now())} by ${esc(currentUser().name)} · BLINDHASA · ${esc(CONFIG.plant)}</p></section>`;
+}
+
+/* ============================================================
+   SHEETS / MODALS  (bottom sheet on mobile, centered on desktop)
+   ============================================================ */
+let sheetState = null;
+function openSheet({ eyebrow = '', title, desc = '', body = '', footer = '', onMount }){
+  closeSheet(true);
+  const root = $id('sheet-root');
+  const prevFocus = document.activeElement;
+  root.innerHTML = `<div class="backdrop" data-action="close-sheet"></div>
+  <div class="sheet" role="dialog" aria-modal="true" aria-labelledby="sheet-title" tabindex="-1">
+    <div class="grabber" aria-hidden="true"></div>
+    <div class="sheet-head">${eyebrow ? `<div class="eyebrow">${eyebrow}</div>` : ''}<h2 id="sheet-title">${title}</h2>${desc ? `<p class="sheet-desc">${desc}</p>` : ''}<button class="icon-btn sheet-x" data-action="close-sheet" aria-label="Close">${ICON.x}</button></div>
+    <div class="sheet-body">${body}</div>
+    ${footer ? `<div class="sheet-foot">${footer}</div>` : ''}
+  </div>`;
+  const sheet = $('.sheet', root), bd = $('.backdrop', root);
+  requestAnimationFrame(() => { bd.classList.add('show'); sheet.classList.add('show'); });
+  document.body.style.overflow = 'hidden';
+  sheetState = { prevFocus, el:sheet };
+  if (onMount) onMount(sheet);
+  setTimeout(() => {
+    if (!sheetState || sheetState.el !== sheet) return;
+    const first = [...sheet.querySelectorAll('[autofocus], .sheet-body input:not([type="file"]), .sheet-body select, .sheet-body textarea, .sheet-body button:not([disabled]), .sheet-foot button:not([disabled])')].find(x => x.offsetParent !== null);
+    (first || sheet).focus({ preventScroll:true });
+  }, 80);
+}
+function closeSheet(immediate){
+  if (!sheetState) return;
+  const { prevFocus, el } = sheetState;
+  sheetState = null;
+  document.body.style.overflow = '';
+  const root = $id('sheet-root');
+  if (immediate) root.innerHTML = '';
+  else {
+    el.classList.remove('show');
+    const bd = $('.backdrop', root); if (bd) bd.classList.remove('show');
+    setTimeout(() => { if (!sheetState) root.innerHTML = ''; }, 230);
+  }
+  if (prevFocus && prevFocus.focus && document.contains(prevFocus)) { try { prevFocus.focus({ preventScroll:true }); } catch (e) {} }
+}
+/* focus trap + Esc */
+document.addEventListener('keydown', e => {
+  if (!sheetState) return;
+  if (e.key === 'Escape'){ e.preventDefault(); closeSheet(); return; }
+  if (e.key !== 'Tab') return;
+  const f = [...sheetState.el.querySelectorAll('a[href],button:not([disabled]),input:not([disabled]):not([type="file"]),select:not([disabled]),textarea:not([disabled]),[tabindex]:not([tabindex="-1"])')].filter(x => x.offsetParent !== null);
+  if (!f.length){ e.preventDefault(); return; }
+  const first = f[0], last = f[f.length - 1];
+  if (e.shiftKey && (document.activeElement === first || document.activeElement === sheetState.el)){ e.preventDefault(); last.focus(); }
+  else if (!e.shiftKey && document.activeElement === last){ e.preventDefault(); first.focus(); }
+});
+function toast(msg, type){
+  const root = $id('toast-root');
+  const el = document.createElement('div');
+  el.className = 'toast' + (type === 'err' ? ' err' : '');
+  el.innerHTML = `${type === 'err' ? ICON.alertLg : ICON.checkLg}<span>${esc(msg)}</span>`;
+  root.appendChild(el);
+  while (root.children.length > 3) root.firstChild.remove();
+  setTimeout(() => { el.style.transition = 'opacity .25s'; el.style.opacity = '0'; setTimeout(() => el.remove(), 260); }, type === 'err' ? 4500 : 2800);
+}
+
+/* ---------- Stage sign-off sheet ---------- */
+function openSignoff(jobId, prefill = {}){
+  const j = jobById(jobId); if (!j) return;
+  const user = currentUser(), st = STAGES[j.currentStageIndex], gate = signoffGate(j, user);
+  if (!gate.open){ toast(gate.reason, 'err'); return; }
+  const isQC = !!st.inspector, isHand = !!st.handover, next = STAGES[j.currentStageIndex + 1], p = checklistProgress(j, st.id);
+  const people = isHand ? [user] : state.users.filter(u => u.canSignStages);
+  const eligible = u => isHand ? u.id === user.id : isQC ? (u.isInspector && u.id === user.id) : true;
+  const sel = { pid: prefill.verifierId || (isHand ? user.id : (isQC && user.isInspector ? user.id : null)) };
+  const defaultNote = prefill.note !== undefined ? prefill.note : (isQC ? `${p.done}/${p.total} checklist items. Road + water test passed. Overlaps checked on all doors.` : '');
+  const personCard = u => `<button type="button" class="person ${sel.pid === u.id ? 'sel' : ''}" data-pid="${u.id}" aria-pressed="${sel.pid === u.id}" ${eligible(u) ? '' : 'disabled title="Quality check: QC inspector only, under their own login"'}><span class="avatar">${u.initials}</span><span class="pinfo"><span class="n">${esc(u.name)}</span><span class="r">${esc(u.role)}${eligible(u) ? '' : ' · locked'}</span></span></button>`;
+  const confirmText = v => isHand
+    ? `I confirm <b>${v ? esc(v.name) : '[name]'}</b> completed the client handover of <b>${j.id}</b> and all documents were delivered.`
+    : `I confirm <b>${v ? esc(v.name) : '[verifier]'}</b> personally verified <b>${st.name}</b> on ${j.id} and it meets Blindhasa's standard.`;
+  const body = `
+    <div class="infocard">${ICON.shieldLg}<div>${isQC ? 'Final quality check. Requires a named QC verifier. Their name is printed on the job record.' : isHand ? 'Client handover. Only the General Manager can close the job, and only after the QC inspector signed Quality check under their own login.' : `Requires a named person who verified the ${st.name} work. Their name is printed on the job record.`}</div></div>
+    ${gate.block ? `<div class="block" role="alert">${ICON.alert}<div>${esc(gate.block)}</div>${gate.switchTo ? `<button class="btn btn-sm" data-action="signout-as" data-user="${gate.switchTo}" data-id="${j.id}">${ICON.logout} Sign out so ${esc(userById(gate.switchTo).name)} can sign in</button>` : ''}</div>` : ''}
+    ${gate.needsOverride ? `<div class="warn">${ICON.alert}<div><b>Checklist incomplete: ${p.done}/${p.total}.</b> As a manager you can override — the reason is mandatory and written to the audit trail.</div></div><label class="field"><span class="l">Override reason *</span><textarea id="so-override" class="input" rows="2" placeholder="Why is it OK to sign off without a complete checklist?"></textarea></label>` : ''}
+    <h3 class="q">${isHand ? 'Who completed the handover?' : 'Who verified it?'}</h3>
+    <div class="people" id="so-people">${people.map(personCard).join('')}${isHand || isQC ? '' : '<button type="button" class="person other" data-pid="other" aria-pressed="false">' + ICON.plus + ' Someone else…</button>'}</div>
+    <div id="so-other" class="hidden"><div class="grid2"><label class="field"><span class="l">Name *</span><input id="so-oname" class="input" placeholder="Full name" autocomplete="off"></label><label class="field"><span class="l">Role *</span><input id="so-orole" class="input" placeholder="e.g. Armoring lead" autocomplete="off"></label></div></div>
+    ${isHand ? `<label class="field"><span class="l">Actual handover date</span><input id="so-date" type="date" class="input" value="${todayISO()}"></label>` : ''}
+    <label class="field"><span class="l">Note <span class="muted" style="font-weight:500">(optional)</span></span><textarea id="so-note" class="input" rows="3" placeholder="What was verified?">${esc(defaultNote)}</textarea></label>
+    <label class="confirm"><input type="checkbox" id="so-confirm" ${prefill.confirm ? 'checked' : ''}><span id="so-confirm-text">${confirmText(null)}</span></label>
+    <p class="foot-note">Saved to the audit trail with the verifier's name and time (${fmtDTY(now())}).</p>`;
+  const footer = `<button class="btn" style="flex:1" data-action="close-sheet">Cancel</button><button class="btn btn-primary" style="flex:1.4" id="so-submit" disabled>${ICON.checkCircle} ${isHand ? 'Confirm handover' : `Sign off → ${next.name}`}</button>`;
+  openSheet({
+    eyebrow:`Stage sign-off · ${j.id}`,
+    title: isHand ? 'Sign off handover' : `Sign off ${st.name}`,
+    desc: isHand ? `${j.year} ${esc(j.make)} ${esc(j.model)}. Confirms ${esc(j.client)} received the vehicle. Sets the actual handover date and closes the job.`
+                 : `${j.year} ${esc(j.make)} ${esc(j.model)}. It can't move to ${next.name} until a named person confirms ${st.name} was verified.`,
+    body, footer,
+    onMount(el){
+      const peopleEl = $('#so-people', el), otherEl = $('#so-other', el), confirmEl = $('#so-confirm', el), submit = $('#so-submit', el);
+      const noteEl = $('#so-note', el), ovEl = $('#so-override', el), onameEl = $('#so-oname', el), oroleEl = $('#so-orole', el), ctext = $('#so-confirm-text', el);
+      const verifier = () => {
+        if (sel.pid === 'other'){ const n = onameEl.value.trim(), r = oroleEl.value.trim(); return n && r ? { userId:null, name:n, role:r, initials:initialsOf(n) } : null; }
+        const u = userById(sel.pid); return u ? { userId:u.id, name:u.name, role:u.role, initials:u.initials } : null;
+      };
+      const update = () => {
+        const v = verifier();
+        ctext.innerHTML = confirmText(v);
+        const ovOk = !gate.needsOverride || (ovEl && ovEl.value.trim().length >= 4);
+        submit.disabled = !(v && confirmEl.checked && ovOk && !gate.block);
+      };
+      peopleEl.addEventListener('click', e => {
+        const b = e.target.closest('[data-pid]'); if (!b || b.disabled) return;
+        sel.pid = b.dataset.pid;
+        peopleEl.querySelectorAll('[data-pid]').forEach(x => { const on = x.dataset.pid === sel.pid; x.classList.toggle('sel', on); x.setAttribute('aria-pressed', on); });
+        otherEl.classList.toggle('hidden', sel.pid !== 'other');
+        if (sel.pid === 'other') onameEl.focus();
+        update();
+      });
+      [onameEl, oroleEl, ovEl].forEach(x => x && x.addEventListener('input', update));
+      confirmEl.addEventListener('change', update);
+      submit.addEventListener('click', () => {
+        const res = signOffStage(j.id, { verifier:verifier(), note:noteEl.value, overrideReason:ovEl ? ovEl.value : '', handoverDate:($('#so-date', el) || {}).value });
+        if (!res.ok){ toast(res.error, 'err'); return; }
+        closeSheet(); render(); toast(res.message);
+      });
+      update();
+    }
+  });
+}
+
+/* ---------- New job (Intake) ---------- */
+function openNewJob(){
+  const d = isoDate(addDays(CONFIG.today, 45)), f = isoDate(addDays(CONFIG.today, 42));
+  const body = `<form id="nj-form" novalidate>
+    <div class="grid2"><label class="field"><span class="l">Make *</span><input name="make" class="input" required placeholder="Toyota" autocomplete="off"></label><label class="field"><span class="l">Model *</span><input name="model" class="input" required placeholder="Land Cruiser 300" autocomplete="off"></label></div>
+    <div class="grid2"><label class="field"><span class="l">Year</span><input name="year" class="input" type="number" min="2000" max="2030" value="${CONFIG.today.getFullYear()}"></label><label class="field"><span class="l">Armor level</span><select name="armorLevel" class="input">${Object.keys(ARMOR_SPECS).map(k => `<option value="${k}" ${k === 'B6' ? 'selected' : ''}>${k} · ${ARMOR_SPECS[k]}</option>`).join('')}</select></label></div>
+    <label class="field"><span class="l">Client *</span><input name="client" class="input" required placeholder="Company or family name" autocomplete="off"></label>
+    <div class="grid2"><label class="field"><span class="l">Promised delivery *</span><input name="promisedDate" class="input" type="date" value="${d}" required></label><label class="field"><span class="l">Forecast ready</span><input name="forecastReadyDate" class="input" type="date" value="${f}"></label></div>
+    <label class="field"><span class="l">Assigned team</span><select name="assignedTeam" class="input">${TEAMS.map(t => `<option>${t}</option>`).join('')}</select></label>
+    <label class="field"><span class="l">Next action</span><input name="nextAction" class="input" value="${NEXT_ACTIONS.intake}"></label>
+    <div id="nj-err" class="err" role="alert"></div></form>`;
+  const footer = `<button class="btn" style="flex:1" data-action="close-sheet">Cancel</button><button class="btn btn-primary" style="flex:1.4" id="nj-submit">${ICON.plus} Create at Intake</button>`;
+  openSheet({ eyebrow:'New job · Intake', title:'Receive a vehicle', desc:`Creates the job at Intake (step 1 of 7) and logs it in the audit trail under ${esc(currentUser().name)}.`, body, footer, onMount(el){
+    const form = $('#nj-form', el);
+    const submit = () => {
+      const data = Object.fromEntries(new FormData(form).entries());
+      const missing = ['make', 'model', 'client', 'promisedDate'].filter(k => !String(data[k] || '').trim());
+      if (missing.length){ $('#nj-err', el).textContent = 'Please fill: ' + missing.join(', '); return; }
+      data.year = parseInt(data.year, 10) || CONFIG.today.getFullYear();
+      data.armorSpec = ARMOR_SPECS[data.armorLevel];
+      const j = createJob(data);
+      closeSheet(true);
+      if (demo.active && !demo.jobId){ demo.jobId = j.id; demo.step = 1; }
+      navigate('#/job/' + j.id);
+      toast(`${j.id} created at Intake`);
+    };
+    $('#nj-submit', el).addEventListener('click', submit);
+    form.addEventListener('submit', e => { e.preventDefault(); submit(); });
+  } });
+}
+
+/* ---------- Date change (reason required) ---------- */
+function openDateEdit(jobId, field){
+  const j = jobById(jobId), u = currentUser();
+  const allowed = field === 'actualHandoverDate' ? u.canDeliver : u.canEditDates;
+  if (!allowed){ toast(`Your role (${u.role}) can't change the ${FIELD_LABEL[field].toLowerCase()}.`, 'err'); return; }
+  const body = `<label class="field"><span class="l">${FIELD_LABEL[field]}</span><input id="de-date" type="date" class="input" value="${j[field] || ''}"></label>
+    <label class="field"><span class="l">Reason * <span class="muted" style="font-weight:500">(written to the audit trail)</span></span><textarea id="de-reason" class="input" rows="3" placeholder="Why is the date changing?"></textarea></label><div id="de-err" class="err" role="alert"></div>`;
+  const footer = `<button class="btn" style="flex:1" data-action="close-sheet">Cancel</button><button class="btn btn-primary" style="flex:1.4" id="de-submit">${ICON.check} Save change</button>`;
+  openSheet({ eyebrow:`${j.id} · dates`, title:`Change ${FIELD_LABEL[field].toLowerCase()}`, desc:`Current: ${j[field] ? fmtDL(j[field]) : 'not set'}. Logged with your name, the time and the reason.`, body, footer, onMount(el){
+    $('#de-submit', el).addEventListener('click', () => {
+      const res = changeDate(jobId, field, $('#de-date', el).value, $('#de-reason', el).value);
+      if (!res.ok){ $('#de-err', el).textContent = res.error; return; }
+      closeSheet(); render(); toast(res.message);
+    });
+  } });
+}
+
+/* ---------- Notes & checklist uncheck ---------- */
+function openNote(jobId){
+  const j = jobById(jobId);
+  const body = `<label class="field"><span class="l">Note</span><textarea id="nt-text" class="input" rows="4" placeholder="What should the team know?"></textarea></label><div id="nt-err" class="err" role="alert"></div>`;
+  const footer = `<button class="btn" style="flex:1" data-action="close-sheet">Cancel</button><button class="btn btn-primary" style="flex:1.4" id="nt-submit">${ICON.note} Add note</button>`;
+  openSheet({ eyebrow:`${j.id} · note`, title:'Add note', desc:`Saved with your name (${esc(currentUser().name)}) and the time.`, body, footer, onMount(el){
+    $('#nt-submit', el).addEventListener('click', () => {
+      const res = addNote(jobId, $('#nt-text', el).value);
+      if (!res.ok){ $('#nt-err', el).textContent = res.error; return; }
+      closeSheet(); render(); toast('Note added · logged');
+    });
+  } });
+}
+function openUncheck(jobId, itemId){
+  const j = jobById(jobId), c = j.checklist.find(x => x.id === itemId);
+  const body = `<p class="sheet-p">“${esc(c.text)}” was completed by <b>${esc(c.doneBy)}</b> on ${fmtDT(c.doneAt)}. Unchecking it is written to the audit trail.</p>
+    <label class="field"><span class="l">Reason *</span><textarea id="uc-reason" class="input" rows="3" placeholder="Why is this item no longer done?"></textarea></label><div id="uc-err" class="err" role="alert"></div>`;
+  const footer = `<button class="btn" style="flex:1" data-action="close-sheet">Cancel</button><button class="btn btn-primary" style="flex:1.4" id="uc-submit">Uncheck item</button>`;
+  openSheet({ eyebrow:`${j.id} · checklist`, title:'Uncheck this item?', body, footer, onMount(el){
+    $('#uc-submit', el).addEventListener('click', () => {
+      const reason = $('#uc-reason', el).value.trim();
+      if (reason.length < 4){ $('#uc-err', el).textContent = 'A reason is required.'; return; }
+      const res = toggleCheck(jobId, itemId, reason);
+      if (!res.ok){ $('#uc-err', el).textContent = res.error; return; }
+      closeSheet(); render(); toast('Item unchecked · logged');
+    });
+  } });
+}
+function handleToggle(jobId, itemId){
+  const j = jobById(jobId), c = j.checklist.find(x => x.id === itemId);
+  if (c.done){ openUncheck(jobId, itemId); return; }
+  const res = toggleCheck(jobId, itemId);
+  if (!res.ok){ toast(res.error, 'err'); return; }
+  render();
+  const b = document.querySelector(`[data-item="${itemId}"]`); if (b) b.focus({ preventScroll:true });
+}
+
+/* ---------- Search ---------- */
+function openSearch(){
+  const body = `<label class="sr-only" for="search-q">Search jobs</label><div class="search-box">${ICON.search}<input id="search-q" class="input" type="search" placeholder="Search ID, model or client…" autocomplete="off"></div><div id="search-results" class="search-results" aria-live="polite"></div>`;
+  openSheet({ eyebrow:'Search', title:'Find a vehicle', body, onMount(el){
+    const q = $('#search-q', el), res = $('#search-results', el);
+    const run = () => {
+      const v = q.value.trim().toLowerCase();
+      const hits = v ? state.jobs.filter(j => `${j.id} ${j.year} ${j.make} ${j.model} ${j.client}`.toLowerCase().includes(v)).slice(0, 8) : state.jobs.filter(j => !j.delivered).slice(0, 5);
+      res.innerHTML = (v ? '' : '<div class="menu-sec">Active jobs</div>') + (hits.length
+        ? hits.map(j => `<button class="srow" data-action="open-job" data-id="${j.id}"><span class="mono">${j.id}</span><span class="s-main"><b>${j.year} ${esc(j.make)} ${esc(j.model)}</b><span class="muted">${esc(j.client)} · ${j.delivered ? 'Delivered' : STAGES[j.currentStageIndex].name}</span></span>${statusPill(j)}</button>`).join('')
+        : `<p class="empty">No matches for “${esc(q.value)}”.</p>`);
+    };
+    q.addEventListener('input', run); run();
+  } });
+}
+
+/* ---------- Account / settings / data menu ---------- */
+function openMenu(){
+  const u = currentUser();
+  const caps = [u.canSignStages ? 'signs stages' : 'read-only + notes', u.isInspector ? 'signs Quality check' : '', u.canDeliver ? 'signs handover' : '', u.canEditDates ? 'edits dates' : ''].filter(Boolean).join(' · ');
+  const body = `
+    <div class="menu-sec">Session</div>
+    <div class="menu-row" style="cursor:default"><span class="avatar sm">${u.initials}</span><span><span>${esc(u.email || '')}</span><span class="r">Permissions: ${caps}</span></span></div>
+    <button class="menu-row" data-action="sign-out">${ICON.logout}<span>Sign out<span class="r">Back to the login page</span></span></button>
+    <div class="menu-sec">Demo</div>
+    <button class="menu-row" data-action="demo-start">${ICON.play}<span>Run guided demo<span class="r">Walk one vehicle from Intake to Delivery — each role signs in with its own account</span></span></button>
+    <div class="menu-sec">Data · backup &amp; restore</div>
+    <button class="menu-row" data-action="export">${ICON.download}<span>Export data<span class="r">Download a JSON backup of all jobs and users</span></span></button>
+    <button class="menu-row" data-action="import">${ICON.upload}<span>Import data<span class="r">Restore from a JSON backup (validated before loading)</span></span></button>
+    <input type="file" id="import-file" class="sr-only" accept="application/json,.json" tabindex="-1" aria-hidden="true">
+    <button class="menu-row" data-action="reset">${ICON.refresh}<span>Reset demo data<span class="r">Restore the original 10 seeded vehicles</span></span></button>
+    <p class="foot-note">${storageOk ? 'Changes are saved in this browser (localStorage).' : 'localStorage is unavailable — changes are kept in memory for this session only.'} App clock: ${fmtDL(CONFIG.today)}, ${CONFIG.today.getFullYear()} · ${fmtT(CONFIG.today)}.</p>`;
+  openSheet({ eyebrow:'Account & settings', title:esc(u.name), desc:esc(u.role), body, onMount(el){
+    $('#import-file', el).addEventListener('change', e => { const f = e.target.files[0]; if (f) importFile(f); e.target.value = ''; });
+  } });
+}
+function confirmReset(){
+  const body = '<p class="sheet-p">This replaces everything stored in this browser with the original seed (8 active + 2 delivered vehicles). Export first if you want to keep your changes.</p>';
+  const footer = `<button class="btn" style="flex:1" data-action="close-sheet">Cancel</button><button class="btn btn-primary" style="flex:1" id="reset-yes">${ICON.refresh} Reset demo data</button>`;
+  openSheet({ eyebrow:'Data', title:'Reset demo data?', body, footer, onMount(el){
+    $('#reset-yes', el).addEventListener('click', () => { state = seedState(); saveState(); exitDemo(true); closeSheet(true); ui.boardFilter = 'all'; ui.stageFilter = 'all'; navigate('#/board'); render(); toast('Demo data restored'); });
+  } });
+}
+
+/* ---------- Login page · the app is only reachable after signing in ----------
+   Dummy credentials live on the user records (email / password). Tapping a demo
+   account chip autofills role + email + password; the form still validates them. */
+function renderLogin(){
+  $id('app').classList.add('hidden');
+  document.body.classList.remove('detail-open');
+  closeSheet(true);
+  const pre = ui.loginSel ? userById(ui.loginSel) : null;
+  const roles = [...new Set(state.users.map(u => u.role))];
+  $id('login-root').innerHTML = `<div class="login"><form class="login-card" id="login-form" novalidate aria-labelledby="login-title">
+    <span class="wordmark">BLINDHASA</span>
+    <div class="eyebrow" style="margin-top:22px">${esc(CONFIG.plant)}</div>
+    <h1 id="login-title">Sign in</h1>
+    <p class="sheet-p">Every sign-off carries the name on the account you use.</p>
+    <label class="field"><span class="l">Role</span><select id="login-role" class="input" required><option value="" disabled ${pre ? '' : 'selected'}>Select your role…</option>${roles.map(r => `<option value="${esc(r)}" ${pre && pre.role === r ? 'selected' : ''}>${esc(r)}</option>`).join('')}</select></label>
+    <label class="field"><span class="l">Email</span><input id="login-email" class="input" type="email" inputmode="email" autocomplete="username" placeholder="name@blindhasa.com" value="${pre ? esc(pre.email) : ''}"></label>
+    <label class="field"><span class="l">Password</span><input id="login-pass" class="input" type="password" autocomplete="current-password" placeholder="••••••••" value="${pre ? esc(pre.password) : ''}"></label>
+    <div id="login-err" class="err" role="alert"></div>
+    <button class="btn btn-primary" type="submit">${ICON.lock} Sign in</button>
+    <div class="demo-accounts"><span class="eyebrow">Demo accounts · tap to autofill</span>
+      <div class="demo-chips" role="group" aria-label="Demo accounts">${state.users.map(u => `<button type="button" class="demo-chip ${pre && pre.id === u.id ? 'on' : ''}" data-login-user="${u.id}" aria-pressed="${!!(pre && pre.id === u.id)}" aria-label="Autofill ${esc(u.name)}, ${esc(u.role)}" title="${esc(u.name)} · ${esc(u.role)}">${u.initials}</button>`).join('')}</div>
+      <div id="login-hint" class="login-hint">${pre ? `Filled: ${esc(pre.name)} · ${esc(pre.role)}` : 'Password for every demo account: demo1234'}</div>
+    </div>
+  </form></div>`;
+  const form = $id('login-form'), roleEl = $id('login-role'), emailEl = $id('login-email'), passEl = $id('login-pass'), errEl = $id('login-err'), hintEl = $id('login-hint');
+  const fill = u => {
+    ui.loginSel = u.id;
+    roleEl.value = u.role; emailEl.value = u.email; passEl.value = u.password; errEl.textContent = '';
+    hintEl.textContent = `Filled: ${u.name} · ${u.role}`;
+    form.querySelectorAll('[data-login-user]').forEach(x => { const on = x.dataset.loginUser === u.id; x.classList.toggle('on', on); x.setAttribute('aria-pressed', on); });
+  };
+  form.addEventListener('click', e => {
+    const b = e.target.closest('[data-login-user]'); if (!b) return;
+    fill(userById(b.dataset.loginUser));
+    form.querySelector('button[type="submit"]').focus();
+  });
+  form.addEventListener('submit', e => {
+    e.preventDefault();
+    const res = tryLogin(roleEl.value, emailEl.value, passEl.value);
+    if (res.error){ errEl.textContent = res.error; ({ role:roleEl, email:emailEl, pass:passEl }[res.focus] || passEl).focus(); return; }
+    const u = res.user;
+    state.currentUserId = u.id; saveState();
+    const dest = ui.afterLogin || '#/board'; ui.afterLogin = null; ui.loginSel = null;
+    navigate(dest);
+    toast(`Signed in as ${u.name} · ${u.role}`);
+    if (demo.active && demo.pendingLogin === u.id){ demo.pendingLogin = null; setTimeout(demoDoStep, 500); }
+  });
+  document.title = 'BLINDHASA · Sign in';
+  renderGuide();
+  if (!pre) setTimeout(() => roleEl.focus({ preventScroll:true }), 50);
+}
+function tryLogin(role, email, pass){
+  email = (email || '').trim().toLowerCase();
+  if (!role) return { error:'Select your role.', focus:'role' };
+  if (!email) return { error:'Enter your email.', focus:'email' };
+  const u = state.users.find(x => (x.email || '').toLowerCase() === email);
+  if (!u) return { error:'No account with that email.', focus:'email' };
+  if ((u.password || '') !== (pass || '')) return { error:'Incorrect password.', focus:'pass' };
+  if (u.role !== role) return { error:`${u.name} is registered as ${u.role}. Select that role to sign in.`, focus:'role' };
+  return { user:u };
+}
+
+/* ============================================================
+   DATA OPS · export / import / users
+   ============================================================ */
+function exportData(){
+  const blob = new Blob([JSON.stringify(state, null, 2)], { type:'application/json' });
+  const url = URL.createObjectURL(blob), a = document.createElement('a');
+  a.href = url; a.download = `blindhasa-backup-${isoDate(now())}.json`;
+  document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
+  toast('Backup downloaded (JSON)');
+}
+function importFile(file){
+  const r = new FileReader();
+  r.onload = () => {
+    let d;
+    try { d = JSON.parse(r.result); } catch (e) { toast('Import failed: the file is not valid JSON.', 'err'); return; }
+    const err = validateData(d);
+    if (err){ toast('Import failed: ' + err, 'err'); return; }
+    const prev = state.currentUserId;
+    state = normalizeData(d);
+    state.currentUserId = state.users.some(u => u.id === prev) ? prev : null;   // keep the current session, never adopt one from a file
+    saveState();
+    closeSheet(true); exitDemo(true);
+    ui.boardFilter = 'all'; ui.stageFilter = 'all';
+    if (state.currentUserId){ navigate('#/board'); render(); } else { ui.afterLogin = '#/board'; navigate('#/login'); }
+    toast(`Imported ${plural(state.jobs.length, 'job')} from ${file.name}`);
+  };
+  r.onerror = () => toast('Import failed: could not read the file.', 'err');
+  r.readAsText(file);
+}
+/* Sign out → login page. opts.dest = where to go after the next sign-in, opts.as = account to prefill */
+function signOut(opts = {}){
+  closeSheet(true);
+  if (!opts.keepDemo) exitDemo(true);
+  ui.afterLogin = opts.dest || null;
+  ui.loginSel = opts.as || null;
+  state.currentUserId = null; saveState();
+  navigate('#/login');
+}
+function preparePrint(){ ui.historyOpen = true; ui.clExpanded = true; if (ui.route.view === 'job') render(); }
+
+/* ============================================================
+   ROUTING  (#/board · #/jobs · #/alerts · #/job/BLH-2033 · #/login)
+   ============================================================ */
+function parseHash(){
+  const h = location.hash.replace(/^#\/?/, '');
+  const [a, b] = h.split('/');
+  if (a === 'job' && b) return { view:'job', id:decodeURIComponent(b) };
+  if (['board', 'jobs', 'alerts', 'login'].includes(a)) return { view:a };
+  return { view:'board' };
+}
+function navigate(hash){ if (location.hash === hash) render(); else location.hash = hash; }
+window.addEventListener('hashchange', () => { ui.route = parseHash(); render(); });
+
+/* ============================================================
+   GUIDED DEMO
+   ============================================================ */
+const demo = { active:false, jobId:null, step:0, pendingLogin:null };
+const DEMO_STEPS = [
+  { title:'Create the demo vehicle', text:'We add a 2026 Toyota Hilux for “Demo Client” through the + button. New jobs always start at Intake and the creation is logged under your account.' },
+  { stage:0, title:'Intake → Teardown', text:'Complete the Intake checklist and sign it off. A named person is recorded on every stage — the stepper will show your initials and the date.' },
+  { stage:1, title:'Teardown → Armor install', text:'Same flow. The sign-off sheet asks “Who verified it?” and only enables the button once a person is chosen and you confirm.' },
+  { stage:2, title:'Armor install → Reassembly', text:'Rule 3: a stage can’t be signed off with an incomplete checklist — unless a manager overrides with a logged reason. We complete the checklist first.' },
+  { stage:3, title:'Reassembly → Paint & finish', text:'Every tick in the checklist stores who did it and when. Unchecking requires a reason.' },
+  { stage:4, title:'Paint & finish → Quality check', text:'One more stage and the vehicle lands in Quality check, where only the inspector can sign.' },
+  { stage:5, as:'rs', title:'Quality check · inspector’s own login', text:'Rule 1: only the QC inspector, signed in as himself, can verify Quality check. You’ll be signed out and asked to sign in as Ricardo Soto (credentials prefilled).' },
+  { stage:6, as:'gm', title:'Delivery · General Manager’s login', text:'Rule 2: only the GM can sign off handover — and only because Ricardo’s own QC sign-off exists. You’ll sign in as the GM, set the handover date and close the job.' },
+  { done:true, title:'Delivered ✓', text:'The job now carries seven named sign-offs with timestamps and a full audit trail. Open the history, then print the job record.' }
+];
+/* which account must be signed in for a step: fixed for QC / Delivery, otherwise whoever is signed in (if they can sign) */
+function demoUserFor(step){
+  if (step.as) return step.as;
+  const u = state.currentUserId && userById(state.currentUserId);
+  return u && u.canSignStages ? u.id : 'sm';
+}
+function renderGuide(){
+  const root = $id('guide-root');
+  if (!demo.active){ root.innerHTML = ''; return; }
+  const s = DEMO_STEPS[demo.step], total = DEMO_STEPS.length;
+  const j = demo.jobId ? jobById(demo.jobId) : null;
+  let title = s.title, text = s.text, btns = '';
+  if (!state.currentUserId){
+    const u = demo.pendingLogin ? userById(demo.pendingLogin) : null;
+    title = u ? `Sign in as ${u.name}` : 'Sign in to continue';
+    text = u ? `${u.role} · credentials are prefilled. Tap “Sign in” and the step continues automatically.` : 'Sign in with any demo account to continue the guided demo.';
+  } else if (demo.step === 0){
+    btns = `<button class="btn btn-primary" data-action="demo-step">${ICON.plus} Create demo job</button><button class="btn" data-action="new-job">Or use the + form</button>`;
+  } else if (s.done){
+    btns = `<button class="btn btn-primary" data-action="demo-exit">${ICON.check} Finish</button>${j ? `<a class="btn" href="#/job/${j.id}">Open ${j.id}</a>` : ''}`;
+  } else {
+    btns = `<button class="btn btn-primary" data-action="demo-step">${ICON.play} Do this step</button>${j ? `<a class="btn" href="#/job/${j.id}">Open ${j.id}</a>` : ''}`;
+  }
+  root.innerHTML = `<aside class="guide" role="region" aria-label="Guided demo"><div class="g-top"><span class="eyebrow">Guided demo · ${demo.step + 1}/${total}${j ? ` · ${j.id}` : ''}</span><button class="icon-btn g-x" data-action="demo-exit" aria-label="Exit guided demo">${ICON.x}</button></div><h3>${title}</h3><p>${text}</p>${btns ? `<div class="g-btns">${btns}</div>` : ''}</aside>`;
+}
+function startDemo(){
+  closeSheet(true);
+  demo.active = true; demo.jobId = null; demo.step = 0; demo.pendingLogin = null;
+  if (ui.route.view !== 'board') navigate('#/board');
+  renderGuide();
+  toast('Guided demo started — follow the black card');
+}
+function exitDemo(silent){
+  const was = demo.active;
+  demo.active = false; demo.jobId = null; demo.step = 0; demo.pendingLogin = null;
+  renderGuide();
+  if (was && !silent) toast('Guided demo ended');
+}
+function syncDemoStep(j){ demo.step = j.delivered ? DEMO_STEPS.length - 1 : j.currentStageIndex + 1; }
+function afterSignoff(j){ if (demo.active && j.id === demo.jobId){ syncDemoStep(j); renderGuide(); } }
+function completeChecklist(j, stageId){
+  const u = currentUser(); let n = 0;
+  j.checklist.forEach(c => { if (c.stage === stageId && !c.done){ c.done = true; c.doneBy = u.name; c.doneAt = isoDT(now()); n++; } });
+  if (n){ log(j, 'checklist', `Checklist completed for ${STAGES.find(s => s.id === stageId).name} — ${plural(n, 'item')} checked by ${u.name} (guided demo)`); saveState(); }
+}
+/* The demo never switches users silently: it signs out and brings up the real login page, prefilled. */
+function demoRequireLogin(userId, j){
+  const u = userById(userId);
+  demo.pendingLogin = userId;
+  signOut({ dest:'#/job/' + j.id, as:userId, keepDemo:true });
+  toast(`Sign in as ${u.name} (${u.role}) to continue — credentials are prefilled`);
+}
+function demoDoStep(){
+  if (!demo.active || !state.currentUserId) return;
+  if (demo.step === 0){
+    const j = createJob({ make:'Toyota', model:'Hilux Double Cab', year:CONFIG.today.getFullYear(), client:'Demo Client S.A.', armorLevel:'B6', armorSpec:ARMOR_SPECS.B6, promisedDate:isoDate(addDays(CONFIG.today, 30)), forecastReadyDate:isoDate(addDays(CONFIG.today, 28)), assignedTeam:'Armoring crew B', nextAction:NEXT_ACTIONS.intake });
+    demo.jobId = j.id; demo.step = 1;
+    navigate('#/job/' + j.id); renderGuide();
+    toast(`${j.id} created at Intake`);
+    return;
+  }
+  const j = jobById(demo.jobId);
+  if (!j){ exitDemo(); return; }
+  syncDemoStep(j);
+  const s = DEMO_STEPS[demo.step];
+  if (s.done){ renderGuide(); return; }
+  const need = demoUserFor(s);
+  if (state.currentUserId !== need){ demoRequireLogin(need, j); return; }
+  completeChecklist(j, STAGES[s.stage].id);
+  const p = checklistProgress(j, STAGES[s.stage].id);
+  if (ui.route.view !== 'job' || ui.route.id !== j.id) navigate('#/job/' + j.id); else render();
+  setTimeout(() => openSignoff(j.id, { verifierId:need, confirm:true, note:s.stage === 5 ? `${p.done}/${p.total} checklist items. Road + water test passed. Overlaps checked on all doors.` : 'Guided demo — work verified in person.' }), 260);
+}
+
+/* ============================================================
+   EVENTS  (delegated)
+   ============================================================ */
+document.addEventListener('click', e => {
+  const t = e.target.closest('[data-action]'); if (!t) return;
+  const a = t.dataset.action, id = t.dataset.id;
+  switch (a){
+    case 'open-job': closeSheet(true); navigate('#/job/' + encodeURIComponent(id)); break;
+    case 'open-alert': markRead(t.dataset.alert); navigate('#/job/' + encodeURIComponent(id)); break;
+    case 'mark-all-read': markAllRead(); break;
+    case 'new-job': closeSheet(true); openNewJob(); break;
+    case 'search': openSearch(); break;
+    case 'menu': openMenu(); break;
+    case 'close-sheet': closeSheet(); break;
+    case 'tile': ui.boardFilter = ui.boardFilter === t.dataset.filter ? 'all' : t.dataset.filter; render(); break;
+    case 'chip': ui.stageFilter = t.dataset.stage; render(); break;
+    case 'clear-filters': ui.boardFilter = 'all'; ui.stageFilter = 'all'; render(); break;
+    case 'clear-job-filters': ui.jobs = { q:'', stage:'all', armor:'all', status:'all', client:'all', sort:'promised' }; render(); break;
+    case 'board-view': ui.boardView = t.dataset.view; render(); break;
+    case 'open-signoff':
+      if (t.getAttribute('aria-disabled') === 'true'){ const g = signoffGate(jobById(id), currentUser()); toast(g.reason || 'Not available right now.', 'err'); }
+      else openSignoff(id);
+      break;
+    case 'toggle-check': handleToggle(id, t.dataset.item); break;
+    case 'show-all-checks': ui.clExpanded = true; render(); break;
+    case 'edit-date': openDateEdit(id, t.dataset.field); break;
+    case 'add-note': openNote(id); break;
+    case 'print': preparePrint(); setTimeout(() => window.print(), 60); break;
+    case 'signout-as': { const u = userById(t.dataset.user); signOut({ dest:'#/job/' + id, as:t.dataset.user }); if (u) toast(`Sign in as ${u.name} to record this sign-off`); break; }
+    case 'sign-out': signOut(); break;
+    case 'export': exportData(); break;
+    case 'import': { const f = $id('import-file'); if (f) f.click(); break; }
+    case 'reset': confirmReset(); break;
+    case 'demo-start': startDemo(); break;
+    case 'demo-step': demoDoStep(); break;
+    case 'demo-exit': exitDemo(); break;
+  }
+});
+/* keyboard activation for card / row "links" */
+document.addEventListener('keydown', e => {
+  if ((e.key === 'Enter' || e.key === ' ') && e.target.matches && e.target.matches('article[data-action], tr[data-action]')){ e.preventDefault(); e.target.click(); }
+});
+document.addEventListener('change', e => {
+  const t = e.target;
+  if (t.dataset.action === 'checklist-stage'){ ui.checklistStage = t.value; ui.clExpanded = false; render(); const s = $id('cl-stage'); if (s) s.focus({ preventScroll:true }); }
+  else if (t.dataset.filter){ ui.jobs[t.dataset.filter] = t.value; renderJobsResults(); }
+});
+document.addEventListener('input', e => { if (e.target.id === 'jobs-q'){ ui.jobs.q = e.target.value; renderJobsResults(); } });
+document.addEventListener('toggle', e => { if (e.target && e.target.dataset && e.target.dataset.details === 'history') ui.historyOpen = e.target.open; }, true);
+window.addEventListener('beforeprint', preparePrint);
+let resizeT; window.addEventListener('resize', () => { clearTimeout(resizeT); resizeT = setTimeout(() => { if (ui.boardView === 'kanban' || document.body.classList.contains('detail-open')) render(); }, 180); });
+
+/* ============================================================
+   INIT
+   ============================================================ */
+function init(){
+  const loaded = loadState();
+  state = loaded || seedState();
+  if (!loaded) saveState();
+  if (!location.hash) history.replaceState(null, '', '#/board');
+  ui.route = parseHash();
+  if (!state.currentUserId && ui.route.view !== 'login') ui.afterLogin = location.hash;   // deep links resume after sign-in
+  render();
+}
+init();
+</script>
+</body>
+</html>
